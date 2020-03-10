@@ -1,0 +1,20 @@
+name: InteropGenerator2
+description: An absolute bare-bones web app.
+version: 2.2.0
+
+environment:
+  sdk: '>=2.2.0 <3.0.0'
+
+dependencies:
+  js: any
+  args: any
+  petitparser: any
+  path: any
+  CommonLib:
+    git: git://github.com/FarragoFiction/CommonLib.git
+  LoaderLib:
+    git: git://github.com/FarragoFiction/LoaderLib.git
+
+dev_dependencies:
+  build_runner: ^1.1.2
+  build_web_compilers: ^1.0.0
