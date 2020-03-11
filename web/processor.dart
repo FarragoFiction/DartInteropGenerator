@@ -77,12 +77,16 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> identifier() => ref(token, ref(IDENTIFIER));
 
     /// a type which also allows lambdas, for arguments and return types
-    Parser<dynamic> type() => ref(typeNoLambda) | ref(lambda);
+    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | ref(lambda);
+    /// a type union
+    Parser<dynamic> type() => (ref(typeGroup)).separatedBy(ref(token, "|"), includeSeparators: false) | ref(typeSingle);
+    Parser<dynamic> typeGroup() => (ref(token, "(") & ref(type) & ref(token, ")"));
+    Parser<dynamic> typeNoLambda() => (ref(typeNoLambdaSingle)).separatedBy(ref(token, "|"), includeSeparators: false) | (ref(token, "(") & ref(type) & ref(token, ")")) | ref(typeNoLambdaSingle);
 
     /// thing.thing.thing etc
     Parser<dynamic> qualified() => ref(identifier) & (ref(token, '.') & ref(identifier)).star();
     /// full type name with generics and array-ness
-    Parser<dynamic> typeNoLambda() => ref(qualified) & ref(typeArguments).optional() & ref(token, "[]").optional();
+    Parser<dynamic> typeNoLambdaSingle() => ref(qualified) & ref(typeArguments).optional() & ref(token, "[]").optional();
     /// parameter with optional ? on the end
     Parser<dynamic> argumentType() => ref(type) & ref(token, "?").optional();
     /// generic type block
@@ -108,15 +112,37 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> moduleContent() => ref(typeDeclaration) | ref(interface) | ref(classDeclaration);
 
     /// type declaration, union or otherwise
-    Parser<dynamic> typeDeclaration() => ref(typeUnion) | ref(typeThingy);
+    Parser<dynamic> typeDeclaration() => ref(typeUnionDeclaration) | ref(typeThingy);
     /// a type union
-    Parser<dynamic> typeUnion() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(typeNoLambda).separatedBy(ref(token, "|"), includeSeparators: false) & ref(token, ";");
+    Parser<dynamic> typeUnionDeclaration() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(typeNoLambda).separatedBy(ref(token, "|"), includeSeparators: false) & ref(token, ";");
     /// that other weird type thing
-    Parser<dynamic> typeThingy() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(token, "{") & ref(typeThingyInner).star() & ref(token, "}") & ref(token, ";");
-    Parser<dynamic> typeThingyInner() => ref(READONLY).optional() & ref(token, "[") & ref(identifier) & ref(IN) & ref(KEYOF) & ref(identifier) & ref(token, "]") & ref(token, ":") & ref(typeThingyType) & ref(token, ";");
-    Parser<dynamic> typeThingyType() => ref(qualified) & ref(typeThingyTypeArguments).optional() & (ref(token, "[") & ref(identifier).optional() & ref(token,"]")).optional();
-    Parser<dynamic> typeThingyTypeArguments() => ref(token, '<') & ref(typeThingyTypeList) & ref(token, '>');
-    Parser<dynamic> typeThingyTypeList() => ref(typeThingyType) & (ref(token, ',') & ref(typeThingyType)).star();
+    Parser<dynamic> typeThingy() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(constrainedObject) & ref(token, ";");
+
+
+    /// index type query operator: keyof THING
+    Parser<dynamic> indexQuery() => ref(KEYOF) & ref(constrainedObjectType);
+    /// indexed access operator: T[\K]
+    Parser<dynamic> indexAccess() => ref(identifier) & ref(token, "[") & ref(identifier) & ref(token, "]");
+
+    /// object with specific field types, including index query stuff...
+    Parser<dynamic> constrainedObject() =>
+        ref(token, "{") &
+        ref(constrainedObjectLine).star() &
+        ref(token, "}");
+    /// a line inside a constrained object?
+    Parser<dynamic> constrainedObjectLine() =>
+        ref(DOC_COMMENT).optional() &
+        ref(READONLY).optional() &
+        ref(token, "[") &
+        ref(identifier) &
+        ((ref(IN) & ref(indexQuery)) | (ref(token, ":") & ref(constrainedObjectType))) &
+        ref(token, "]") &
+        ref(token, ":") &
+        ref(constrainedObjectType) &
+        ref(token, ";");
+    Parser<dynamic> constrainedObjectType() => ref(indexAccess) | (ref(qualified) & ref(constrainedObjectTypeArguments).optional() & ref(token, "[]").optional());
+    Parser<dynamic> constrainedObjectTypeArguments() => ref(token, '<') & ref(constrainedObjectTypeList) & ref(token, '>');
+    Parser<dynamic> constrainedObjectTypeList() => ref(constrainedObjectType).separatedBy(ref(token, ","), includeSeparators: false);
 
     /// interface, inside a module
     Parser<dynamic> interface() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(INTERFACE) & ref(typeNoLambda) & (ref(EXTENDS) & ref(typeNoLambda)).optional() & ref(token, "{") & ref(interfaceContent).star() & ref(token, "}");
@@ -151,9 +177,9 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// a list of name : type pairs
     Parser<dynamic> functionArguments() => ref(token, "(") & ref(functionArgumentList).optional() & ref(token, ")");
 
-    /// accessor
+    /// field accessor
     Parser<dynamic> accessor() => ref(PRIVATE) | ref(PROTECTED);
-    /// field
+    /// a class field
     Parser<dynamic> field() =>
         ref(DOC_COMMENT).optional() &
         ref(accessor).optional() &
@@ -161,9 +187,9 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(READONLY).optional() &
         ref(identifier) &
         ref(token, "?").optional() &
-        (ref(token, ":") & ref(type)).optional() &
+        (ref(token, ":") & (ref(type) | ref(constrainedObject))).optional() &
         ref(token, ";");
-    /// getter
+    /// a class getter method
     Parser<dynamic> getter() =>
         ref(DOC_COMMENT).optional() &
         ref(accessor).optional() &
@@ -173,7 +199,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(token, "()") &
         ref(token, ":") & ref(type) &
         ref(token, ";");
-    /// setter
+    /// a class setter method
     Parser<dynamic> setter() =>
         ref(DOC_COMMENT).optional() &
         ref(accessor).optional() &
@@ -184,7 +210,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(functionArgument) &
         ref(token, ")") &
         ref(token, ";");
-    /// method
+    /// a class method
     Parser<dynamic> method() =>
         ref(DOC_COMMENT).optional() &
         ref(accessor).optional() &
@@ -211,5 +237,5 @@ class TSDGrammarDefinition extends GrammarDefinition {
     }
 
     @override
-    Parser<dynamic> start() => ref(module);//.end();
+    Parser<dynamic> start() => ref(type);//.end();
 }

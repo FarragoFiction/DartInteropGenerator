@@ -1,11 +1,56 @@
+(thing | (thing))
+
 declare module BABYLON {
-    /** @hidden */
-    export class _TypeStore {
-        /** @hidden */
-        static RegisteredTypes: {
-            [key: string]: Object;
+    /**
+     * Extended version of XMLHttpRequest with support for customizations (headers, ...)
+     */
+    export class WebRequest implements IWebRequest {
+        private _xhr;
+        /**
+         * Custom HTTP Request Headers to be sent with XMLHttpRequests
+         * i.e. when loading files, where the server/service expects an Authorization header
+         */
+        static CustomRequestHeaders: {
+            [key: string]: string;
         };
-        /** @hidden */
-        static GetClass(fqdn: string): any;
+        /**
+         * Add callback functions in this array to update all the requests before they get sent to the network
+         */
+        static CustomRequestModifiers: ((request: XMLHttpRequest, url: string) => void)[];
+        private _injectCustomRequestHeaders;
+        /**
+         * Gets or sets a function to be called when loading progress changes
+         */
+        get onprogress(): ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
+        set onprogress(value: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null);
+        /**
+         * Returns client's state
+         */
+        get readyState(): number;
+        /**
+         * Returns client's status
+         */
+        get status(): number;
+        /**
+         * Returns client's status as a text
+         */
+        get statusText(): string;
+        /**
+         * Returns client's response
+         */
+        get response(): any;
+        /**
+         * Returns client's response url
+         */
+        get responseURL(): string;
+        /**
+         * Returns client's response as text
+         */
+        get responseText(): string;
+        /**
+         * Gets or sets the expected response type
+         */
+        get responseType(): XMLHttpRequestResponseType;
+        set responseType(value: XMLHttpRequestResponseType);
     }
 }
