@@ -1,56 +1,92 @@
-(thing | (thing))
+static SetCorsBehavior(url: string | string[], element: {
+            crossOrigin: string | null;
+        }): void;
+
+
 
 declare module BABYLON {
     /**
-     * Extended version of XMLHttpRequest with support for customizations (headers, ...)
+     * @hidden
      */
-    export class WebRequest implements IWebRequest {
-        private _xhr;
+    export class FileTools {
         /**
-         * Custom HTTP Request Headers to be sent with XMLHttpRequests
-         * i.e. when loading files, where the server/service expects an Authorization header
+         * Gets or sets the retry strategy to apply when an error happens while loading an asset
          */
-        static CustomRequestHeaders: {
-            [key: string]: string;
-        };
+        static DefaultRetryStrategy: (url: string, request: WebRequest, retryIndex: number) => number;
         /**
-         * Add callback functions in this array to update all the requests before they get sent to the network
+         * Gets or sets the base URL to use to load assets
          */
-        static CustomRequestModifiers: ((request: XMLHttpRequest, url: string) => void)[];
-        private _injectCustomRequestHeaders;
+        static BaseUrl: string;
         /**
-         * Gets or sets a function to be called when loading progress changes
+         * Default behaviour for cors in the application.
+         * It can be a string if the expected behavior is identical in the entire app.
+         * Or a callback to be able to set it per url or on a group of them (in case of Video source for instance)
          */
-        get onprogress(): ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
-        set onprogress(value: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null);
+        static CorsBehavior: string | ((url: string | string[]) => string);
         /**
-         * Returns client's state
+         * Gets or sets a function used to pre-process url before using them to load assets
          */
-        get readyState(): number;
+        static PreprocessUrl: (url: string) => string;
         /**
-         * Returns client's status
+         * Removes unwanted characters from an url
+         * @param url defines the url to clean
+         * @returns the cleaned url
          */
-        get status(): number;
+        private static _CleanUrl;
         /**
-         * Returns client's status as a text
+         * Sets the cors behavior on a dom element. This will add the required Tools.CorsBehavior to the element.
+         * @param url define the url we are trying
+         * @param element define the dom element where to configure the cors policy
          */
-        get statusText(): string;
+        static SetCorsBehavior(url: string | string[], element: {
+            crossOrigin: string | null;
+        }): void;
         /**
-         * Returns client's response
+         * Loads an image as an HTMLImageElement.
+         * @param input url string, ArrayBuffer, or Blob to load
+         * @param onLoad callback called when the image successfully loads
+         * @param onError callback called when the image fails to load
+         * @param offlineProvider offline provider for caching
+         * @param mimeType optional mime type
+         * @returns the HTMLImageElement of the loaded image
          */
-        get response(): any;
+        static LoadImage(input: string | ArrayBuffer | ArrayBufferView | Blob, onLoad: (img: HTMLImageElement | ImageBitmap) => void, onError: (message?: string, exception?: any) => void, offlineProvider: Nullable<IOfflineProvider>, mimeType?: string): Nullable<HTMLImageElement>;
         /**
-         * Returns client's response url
+         * Reads a file from a File object
+         * @param file defines the file to load
+         * @param onSuccess defines the callback to call when data is loaded
+         * @param onProgress defines the callback to call during loading process
+         * @param useArrayBuffer defines a boolean indicating that data must be returned as an ArrayBuffer
+         * @param onError defines the callback to call when an error occurs
+         * @returns a file request object
          */
-        get responseURL(): string;
+        static ReadFile(file: File, onSuccess: (data: any) => void, onProgress?: (ev: ProgressEvent) => any, useArrayBuffer?: boolean, onError?: (error: ReadFileError) => void): IFileRequest;
         /**
-         * Returns client's response as text
+         * Loads a file from a url
+         * @param url url to load
+         * @param onSuccess callback called when the file successfully loads
+         * @param onProgress callback called while file is loading (if the server supports this mode)
+         * @param offlineProvider defines the offline provider for caching
+         * @param useArrayBuffer defines a boolean indicating that date must be returned as ArrayBuffer
+         * @param onError callback called when the file fails to load
+         * @returns a file request object
          */
-        get responseText(): string;
+        static LoadFile(url: string, onSuccess: (data: string | ArrayBuffer, responseURL?: string) => void, onProgress?: (ev: ProgressEvent) => void, offlineProvider?: IOfflineProvider, useArrayBuffer?: boolean, onError?: (request?: WebRequest, exception?: LoadFileError) => void): IFileRequest;
         /**
-         * Gets or sets the expected response type
+         * Loads a file
+         * @param url url to load
+         * @param onSuccess callback called when the file successfully loads
+         * @param onProgress callback called while file is loading (if the server supports this mode)
+         * @param useArrayBuffer defines a boolean indicating that date must be returned as ArrayBuffer
+         * @param onError callback called when the file fails to load
+         * @param onOpened callback called when the web request is opened
+         * @returns a file request object
          */
-        get responseType(): XMLHttpRequestResponseType;
-        set responseType(value: XMLHttpRequestResponseType);
+        static RequestFile(url: string, onSuccess: (data: string | ArrayBuffer, request?: WebRequest) => void, onProgress?: (event: ProgressEvent) => void, offlineProvider?: IOfflineProvider, useArrayBuffer?: boolean, onError?: (error: RequestFileError) => void, onOpened?: (request: WebRequest) => void): IFileRequest;
+        /**
+         * Checks if the loaded document was accessed via `file:`-Protocol.
+         * @returns boolean
+         */
+        static IsFileURL(): boolean;
     }
 }

@@ -57,7 +57,8 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> MULTILINE_COMMENT() => string("/*") & (ref(MULTILINE_COMMENT) | string("*/").neg()).star() & string("*/");
 
     Parser<dynamic> DOC_COMMENT_LINE() => string("* ").trim() & ref(token, ref(NEWLINE).neg().star().flatten());
-    Parser<dynamic> MULTI_LINE_DOC_COMMENT() => ref(token, "/**") & ref(DOC_COMMENT_LINE).star() & ref(token, "*/");
+    Parser<dynamic> DOC_COMMENT_FIRST_LINE() => string("/**").trim() & ref(token, ref(NEWLINE).neg().star().flatten()).optional();
+    Parser<dynamic> MULTI_LINE_DOC_COMMENT() => ref(DOC_COMMENT_FIRST_LINE) & ref(DOC_COMMENT_LINE).star() & ref(token, "*/");
     Parser<dynamic> SINGLE_LINE_DOC_COMMENT() => ref(token, "/**") & ref(token, string("*/").neg().star().trim().flatten()) & ref(token, "*/") & ref(NEWLINE).optional();
     Parser<dynamic> DOC_COMMENT() => ref(MULTI_LINE_DOC_COMMENT) | ref(SINGLE_LINE_DOC_COMMENT);
 
@@ -77,10 +78,11 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> identifier() => ref(token, ref(IDENTIFIER));
 
     /// a type which also allows lambdas, for arguments and return types
-    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | ref(lambda);
-    /// a type union
-    Parser<dynamic> type() => (ref(typeGroup)).separatedBy(ref(token, "|"), includeSeparators: false) | ref(typeSingle);
-    Parser<dynamic> typeGroup() => (ref(token, "(") & ref(type) & ref(token, ")"));
+    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | (ref(token, "(") & ref(lambda) & ref(token, ")") & ref(token, "[]").optional()) | ref(lambda) | ref(constrainedObject);
+    /// a type potentially surrounded by parentheses, can be a union
+    Parser<dynamic> type() => ref(typeUnion);// | (ref(token, "(") & ref(typeUnion) & ref(token, ")"));
+    Parser<dynamic> typeUnion() => (ref(typeSingle)).separatedBy(ref(token, "|"), includeSeparators: false);
+    //Parser<dynamic> typeBracketed() => (ref(token, "(") & ref(typeSingle) & ref(token, ")")) | ref(typeSingle);
     Parser<dynamic> typeNoLambda() => (ref(typeNoLambdaSingle)).separatedBy(ref(token, "|"), includeSeparators: false) | (ref(token, "(") & ref(type) & ref(token, ")")) | ref(typeNoLambdaSingle);
 
     /// thing.thing.thing etc
@@ -90,11 +92,11 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// parameter with optional ? on the end
     Parser<dynamic> argumentType() => ref(type) & ref(token, "?").optional();
     /// generic type block
-    Parser<dynamic> typeArguments() => ref(token, '<') & ref(typeNoLambdaList) & ref(token, '>');
+    Parser<dynamic> typeArguments() => ref(token, '<') & ref(typeList) & ref(token, '>');
     /// list of types for generics
     Parser<dynamic> typeNoLambdaList() => ref(typeNoLambda).separatedBy(ref(token, ","), includeSeparators: false);
     /// list of types for arguments
-    Parser<dynamic> typeList() => ref(type).separatedBy(ref(token, ","), includeSeparators: false);
+    Parser<dynamic> typeList() => ref(typeSingle).separatedBy(ref(token, ","), includeSeparators: false);
 
     /// type parameter name T etc
     Parser<dynamic> typeParameter() => ref(identifier);
@@ -102,7 +104,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> typeParameters() => ref(token, "<") & ref(typeParameter) & (ref(token, ",") & ref(typeParameter)).star() & ref(token, ">");
 
     /// lambda
-    Parser<dynamic> lambda() => ref(functionArguments) & ref(token, "=>") & ref(type);
+    Parser<dynamic> lambda() => (ref(functionArguments) & ref(token, "=>") & ref(type)) | (ref(token, "(") & ref(lambda) & (ref(token, ")")) & (ref(token, "[]")));
 
     /// module declaration
     Parser<dynamic> module() => ref(DOC_COMMENT).optional() & ref(DECLARE) & ref(MODULE) & ref(identifier) & ref(moduleBody);
@@ -237,5 +239,5 @@ class TSDGrammarDefinition extends GrammarDefinition {
     }
 
     @override
-    Parser<dynamic> start() => ref(type);//.end();
+    Parser<dynamic> start() => ref(method);//.end();
 }
