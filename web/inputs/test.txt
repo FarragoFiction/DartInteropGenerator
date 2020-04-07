@@ -1,238 +1,75 @@
+
 declare module BABYLON {
     /**
-     * Class for creating a cube texture
+     * A behavior that when attached to a mesh will allow the mesh to be dragged around based on directions and origin of the pointer's ray
      */
-    export class CubeTexture extends BaseTexture {
-        private _delayedOnLoad;
+    export class SixDofDragBehavior implements Behavior<Mesh> {
+        private static _virtualScene;
+        private _ownerNode;
+        private _sceneRenderObserver;
+        private _scene;
+        private _targetPosition;
+        private _virtualOriginMesh;
+        private _virtualDragMesh;
+        private _pointerObserver;
+        private _moving;
+        private _startingOrientation;
         /**
-         * Observable triggered once the texture has been loaded.
+         * How much faster the object should move when the controller is moving towards it. This is useful to bring objects that are far away from the user to them faster. Set this to 0 to avoid any speed increase. (Default: 3)
          */
-        onLoadObservable: Observable<CubeTexture>;
+        private zDragFactor;
         /**
-         * The url of the texture
+         * If the object should rotate to face the drag origin
          */
-        url: string;
+        rotateDraggedObject: boolean;
         /**
-         * Gets or sets the center of the bounding box associated with the cube texture.
-         * It must define where the camera used to render the texture was set
-         * @see http://doc.babylonjs.com/how_to/reflect#using-local-cubemap-mode
+         * If the behavior is currently in a dragging state
          */
-        boundingBoxPosition: Vector3;
-        private _boundingBoxSize;
+        dragging: boolean;
         /**
-         * Gets or sets the size of the bounding box associated with the cube texture
-         * When defined, the cubemap will switch to local mode
-         * @see https://community.arm.com/graphics/b/blog/posts/reflections-based-on-local-cubemaps-in-unity
-         * @example https://www.babylonjs-playground.com/#RNASML
+         * The distance towards the target drag position to move each frame. This can be useful to avoid jitter. Set this to 1 for no delay. (Default: 0.2)
          */
-        set boundingBoxSize(value: Vector3);
+        dragDeltaRatio: number;
         /**
-         * Returns the bounding box size
-         * @see http://doc.babylonjs.com/how_to/reflect#using-local-cubemap-mode
+         * The id of the pointer that is currently interacting with the behavior (-1 when no pointer is active)
          */
-        get boundingBoxSize(): Vector3;
-        protected _rotationY: number;
+        currentDraggingPointerID: number;
         /**
-         * Sets texture matrix rotation angle around Y axis in radians.
+         * If camera controls should be detached during the drag
          */
-        set rotationY(value: number);
+        detachCameraControls: boolean;
         /**
-         * Gets texture matrix rotation angle around Y axis radians.
+         * Fires each time a drag starts
          */
-        get rotationY(): number;
+        onDragStartObservable: Observable<{}>;
         /**
-         * Are mip maps generated for this texture or not.
+         *  Fires each time a drag ends (eg. mouse release after drag)
          */
-        get noMipmap(): boolean;
-        private _noMipmap;
-        private _files;
-        protected _forcedExtension: Nullable<string>;
-        private _extensions;
-        private _textureMatrix;
-        private _format;
-        private _createPolynomials;
-        /** @hidden */
-        _prefiltered: boolean;
+        onDragEndObservable: Observable<{}>;
         /**
-         * Creates a cube texture from an array of image urls
-         * @param files defines an array of image urls
-         * @param scene defines the hosting scene
-         * @param noMipmap specifies if mip maps are not used
-         * @returns a cube texture
+         * Instantiates a behavior that when attached to a mesh will allow the mesh to be dragged around based on directions and origin of the pointer's ray
          */
-        static CreateFromImages(files: string[], scene: Scene, noMipmap?: boolean): CubeTexture;
+        constructor();
         /**
-         * Creates and return a texture created from prefilterd data by tools like IBL Baker or Lys.
-         * @param url defines the url of the prefiltered texture
-         * @param scene defines the scene the texture is attached to
-         * @param forcedExtension defines the extension of the file if different from the url
-         * @param createPolynomials defines whether or not to create polynomial harmonics from the texture data if necessary
-         * @return the prefiltered texture
+         *  The name of the behavior
          */
-        static CreateFromPrefilteredData(url: string, scene: Scene, forcedExtension?: any, createPolynomials?: boolean): CubeTexture;
+        get name(): string;
         /**
-         * Creates a cube texture to use with reflection for instance. It can be based upon dds or six images as well
-         * as prefiltered data.
-         * @param rootUrl defines the url of the texture or the root name of the six images
-         * @param scene defines the scene the texture is attached to
-         * @param extensions defines the suffixes add to the picture name in case six images are in use like _px.jpg...
-         * @param noMipmap defines if mipmaps should be created or not
-         * @param files defines the six files to load for the different faces in that order: px, py, pz, nx, ny, nz
-         * @param onLoad defines a callback triggered at the end of the file load if no errors occured
-         * @param onError defines a callback triggered in case of error during load
-         * @param format defines the internal format to use for the texture once loaded
-         * @param prefiltered defines whether or not the texture is created from prefiltered data
-         * @param forcedExtension defines the extensions to use (force a special type of file to load) in case it is different from the file name
-         * @param createPolynomials defines whether or not to create polynomial harmonics from the texture data if necessary
-         * @param lodScale defines the scale applied to environment texture. This manages the range of LOD level used for IBL according to the roughness
-         * @param lodOffset defines the offset applied to environment texture. This manages first LOD level used for IBL according to the roughness
-         * @return the cube texture
+         *  Initializes the behavior
          */
-        constructor(rootUrl: string, scene: Scene, extensions?: Nullable<string[]>, noMipmap?: boolean, files?: Nullable<string[]>, onLoad?: Nullable<() => void>, onError?: Nullable<(message?: string, exception?: any) => void>, format?: number, prefiltered?: boolean, forcedExtension?: any, createPolynomials?: boolean, lodScale?: number, lodOffset?: number);
+        init(): void;
         /**
-         * Gets a boolean indicating if the cube texture contains prefiltered mips (used to simulate roughness with PBR)
+         * In the case of multiplea active cameras, the cameraToUseForPointers should be used if set instead of active camera
          */
-        get isPrefiltered(): boolean;
+        private get _pointerCamera();
         /**
-         * Get the current class name of the texture useful for serialization or dynamic coding.
-         * @returns "CubeTexture"
+         * Attaches the scale behavior the passed in mesh
+         * @param ownerNode The mesh that will be scaled around once attached
          */
-        getClassName(): string;
+        attach(ownerNode: Mesh): void;
         /**
-         * Update the url (and optional buffer) of this texture if url was null during construction.
-         * @param url the url of the texture
-         * @param forcedExtension defines the extension to use
-         * @param onLoad callback called when the texture is loaded  (defaults to null)
-         * @param prefiltered Defines whether the updated texture is prefiltered or not
+         *  Detaches the behavior from the mesh
          */
-        updateURL(url: string, forcedExtension?: string, onLoad?: () => void, prefiltered?: boolean): void;
-        /**
-         * Delays loading of the cube texture
-         * @param forcedExtension defines the extension to use
-         */
-        delayLoad(forcedExtension?: string): void;
-        /**
-         * Returns the reflection texture matrix
-         * @returns the reflection texture matrix
-         */
-        getReflectionTextureMatrix(): Matrix;
-        /**
-         * Sets the reflection texture matrix
-         * @param value Reflection texture matrix
-         */
-        setReflectionTextureMatrix(value: Matrix): void;
-        /**
-         * Parses text to create a cube texture
-         * @param parsedTexture define the serialized text to read from
-         * @param scene defines the hosting scene
-         * @param rootUrl defines the root url of the cube texture
-         * @returns a cube texture
-         */
-        static Parse(parsedTexture: any, scene: Scene, rootUrl: string): CubeTexture;
-        /**
-         * Makes a clone, or deep copy, of the cube texture
-         * @returns a new cube texture
-         */
-        clone(): CubeTexture;
-    }
-}
-declare module BABYLON {
-    /**
-     * Manages the defines for the Material
-     */
-    export class MaterialDefines {
-        /** @hidden */
-        protected _keys: string[];
-        private _isDirty;
-        /** @hidden */
-        _renderId: number;
-        /** @hidden */
-        _areLightsDirty: boolean;
-        /** @hidden */
-        _areLightsDisposed: boolean;
-        /** @hidden */
-        _areAttributesDirty: boolean;
-        /** @hidden */
-        _areTexturesDirty: boolean;
-        /** @hidden */
-        _areFresnelDirty: boolean;
-        /** @hidden */
-        _areMiscDirty: boolean;
-        /** @hidden */
-        _areImageProcessingDirty: boolean;
-        /** @hidden */
-        _normals: boolean;
-        /** @hidden */
-        _uvs: boolean;
-        /** @hidden */
-        _needNormals: boolean;
-        /** @hidden */
-        _needUVs: boolean;
-        [id: string]: any;
-        /**
-         * Specifies if the material needs to be re-calculated
-         */
-        get isDirty(): boolean;
-        /**
-         * Marks the material to indicate that it has been re-calculated
-         */
-        markAsProcessed(): void;
-        /**
-         * Marks the material to indicate that it needs to be re-calculated
-         */
-        markAsUnprocessed(): void;
-        /**
-         * Marks the material to indicate all of its defines need to be re-calculated
-         */
-        markAllAsDirty(): void;
-        /**
-         * Marks the material to indicate that image processing needs to be re-calculated
-         */
-        markAsImageProcessingDirty(): void;
-        /**
-         * Marks the material to indicate the lights need to be re-calculated
-         * @param disposed Defines whether the light is dirty due to dispose or not
-         */
-        markAsLightDirty(disposed?: boolean): void;
-        /**
-         * Marks the attribute state as changed
-         */
-        markAsAttributesDirty(): void;
-        /**
-         * Marks the texture state as changed
-         */
-        markAsTexturesDirty(): void;
-        /**
-         * Marks the fresnel state as changed
-         */
-        markAsFresnelDirty(): void;
-        /**
-         * Marks the misc state as changed
-         */
-        markAsMiscDirty(): void;
-        /**
-         * Rebuilds the material defines
-         */
-        rebuild(): void;
-        /**
-         * Specifies if two material defines are equal
-         * @param other - A material define instance to compare to
-         * @returns - Boolean indicating if the material defines are equal (true) or not (false)
-         */
-        isEqual(other: MaterialDefines): boolean;
-        /**
-         * Clones this instance's defines to another instance
-         * @param other - material defines to clone values to
-         */
-        cloneTo(other: MaterialDefines): void;
-        /**
-         * Resets the material define values
-         */
-        reset(): void;
-        /**
-         * Converts the material define values to a string
-         * @returns - String of material define information
-         */
-        toString(): string;
+        detach(): void;
     }
 }
