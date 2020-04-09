@@ -11,12 +11,16 @@ Future<void> main(List<String> arguments) async {
 
     final ArgResults argResults = parser.parse(arguments);
 
+    final RegExp commentStripper = new RegExp(r"\/\/.*");
+    final RegExp commentStripper2 = new RegExp(r"\/\*[^\*]*\*\/");
+
     final File inputFile = new File(Path.join(Path.dirname(Platform.script.toFilePath()), argResults[inputArg]));
-    final String data = await inputFile.readAsString();
+    final String data = (await inputFile.readAsString()).replaceAll(commentStripper, "").replaceAll(commentStripper2, "");
 
     final GrammarParser processor = new TSDGrammar();
+    
     final Result<dynamic> result = processor.parse(data);
-    print(result);
+    print("done: ${result.isSuccess ? "success" : result}");
 }
 
 class TSDGrammar extends GrammarParser {
@@ -57,14 +61,33 @@ class TSDGrammarDefinition extends GrammarDefinition {
 
     Parser<dynamic> NEWLINE() => pattern("\n\r");
 
+    static const Map<String, String> escapeChars = <String,String>{
+        '\\': '\\',
+        '/': '/',
+        '"': '"',
+        "'": "'",
+        'b': '\b',
+        'f': '\f',
+        'n': '\n',
+        'r': '\r',
+        't': '\t'
+    };
+
+    Parser<dynamic> characterPrimitiveDoubleQuote() => ref(characterNormalDoubleQuote) | ref(characterEscape) | ref(characterUnicode);
+    Parser<dynamic> characterNormalDoubleQuote() => pattern('^"\\');
+    Parser<dynamic> characterPrimitiveSingleQuote() => ref(characterNormalSingleQuote) | ref(characterEscape) | ref(characterUnicode);
+    Parser<dynamic> characterNormalSingleQuote() => pattern("^'\\");
+    Parser<dynamic> characterEscape() => char('\\') & pattern(escapeChars.keys.join());
+    Parser<dynamic> characterUnicode() => string('\\u') & pattern('0-9A-Fa-f').times(4);
+    Parser<dynamic> stringSingleQuotes() => char("'") & ref(characterPrimitiveSingleQuote).star().flatten() & char("'");
+    Parser<dynamic> stringDoubleQuotes() => char('"') & ref(characterPrimitiveDoubleQuote).star().flatten() & char('"');
+    Parser<dynamic> stringPrimitive() => ref(stringDoubleQuotes) | ref(stringSingleQuotes);
+
     Parser<dynamic> WHITESPACE() => whitespace();
 
-    Parser<dynamic> SINGLE_LINE_COMMENT() => string('//') & ref(NEWLINE).neg().star() & ref(NEWLINE).optional();
+    Parser<dynamic> SINGLE_LINE_COMMENT() => string('//') & ref(NEWLINE).neg().starLazy(ref(NEWLINE)) & ref(NEWLINE).optional();
     Parser<dynamic> MULTILINE_COMMENT() => string("/*") & (ref(MULTILINE_COMMENT) | string("*/").neg()).star() & string("*/");
 
-    //Parser<dynamic> DOC_COMMENT_LINE() => ref(token, "*") & ref(token, ref(NEWLINE).neg()).star().flatten();
-    //Parser<dynamic> DOC_COMMENT_FIRST_LINE() => string("/**").trim() & ref(token, ref(NEWLINE).neg().star().flatten()).optional();
-    //Parser<dynamic> MULTI_LINE_DOC_COMMENT() =>
     Parser<dynamic> DOC_COMMENT() =>
         ref(token, "/**") &
         any().starLazy(ref(token, "*/")).flatten().map((String input) {
@@ -76,9 +99,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
                 return trimmed;
             }).toList();
         }) &
-        ref(token, "*/");  //ref(DOC_COMMENT_FIRST_LINE) & ref(DOC_COMMENT_LINE).star() & ref(token, "*/");
-    //Parser<dynamic> SINGLE_LINE_DOC_COMMENT() => ref(token, "/**") & ref(token, string("*/").neg().star().trim().flatten()) & ref(token, "*/") & ref(NEWLINE).optional();
-    //Parser<dynamic> DOC_COMMENT() => ref(MULTI_LINE_DOC_COMMENT) | ref(SINGLE_LINE_DOC_COMMENT);
+        ref(token, "*/");
 
     //#############################################################################
 
@@ -87,28 +108,33 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> IDENTIFIER_PART() => ref(IDENTIFIER_START) | ref(DIGIT);
     Parser<dynamic> IDENTIFIER() => (ref(IDENTIFIER_START) & ref(IDENTIFIER_PART).star()).flatten();
 
+    Parser<dynamic> ARRAY_BRACKETS() => ref(token, "[") & ref(identifier).optional() & ref(token, "]");
+
     //#############################################################################
 
     /// overall file structure
-    Parser<dynamic> tsdFile() => ( ref(module) | ref(interfaceTopLevel) ).star();
+    Parser<dynamic> tsdFile() => ( ref(module) | ref(interfaceTopLevel) | ref(variableDeclaration) | ref(typeDeclaration) | ref(classTopLevel) ).star();
 
     /// a valid single name, starting with a letter, can have numbers and underscores
     Parser<dynamic> identifier() => ref(token, ref(IDENTIFIER));
 
     /// a type which also allows lambdas, for arguments and return types
-    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | (ref(token, "(") & ref(lambda) & ref(token, ")") & ref(token, "[]").optional()) | ref(lambda) | ref(objectType) | ref(constrainedObject);
+    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | (ref(token, "(") & ref(lambda) & ref(token, ")") & ref(ARRAY_BRACKETS).star()) | ref(lambda) | (ref(constrainedObject) & ref(ARRAY_BRACKETS).star());
     /// a type, which might be a union
-    Parser<dynamic> type() => ref(typeUnion) | (ref(token, "(") & ref(typeUnion) & ref(token, ")") & ref(token,"[]"));
+    Parser<dynamic> type() => ref(typeUnion) | (ref(token, "(") & ref(typeUnion) & ref(token, ")") & ref(ARRAY_BRACKETS));
     Parser<dynamic> typeUnion() => ref(typeIntersection).separatedBy(ref(token, "|"), includeSeparators: false);
     Parser<dynamic> typeNoLambda() => (ref(typeNoLambdaSingle)).separatedBy(ref(token, "|"), includeSeparators: false) | (ref(token, "(") & ref(type) & ref(token, ")")) | ref(typeNoLambdaSingle);
     Parser<dynamic> typeIntersection() => (ref(typeSingle)).separatedBy(ref(token, "&"), includeSeparators: false);
 
+    /// a set of different string options...
+    Parser<dynamic> stringUnion() => ref(stringPrimitive).separatedBy(ref(token,"|"), includeSeparators: false);
+
     /// thing.thing.thing etc
     Parser<dynamic> qualified() => ref(identifier) & (ref(token, '.') & ref(identifier)).star();
     /// full type name with generics and array-ness
-    Parser<dynamic> typeNoLambdaSingle() => ref(qualified) & ref(typeArguments).optional() & ref(token, "[]").star();
+    Parser<dynamic> typeNoLambdaSingle() => ref(qualified) & ref(typeArguments).optional() & ref(ARRAY_BRACKETS).star();
     /// parameter with optional ? on the end
-    Parser<dynamic> argumentType() => ref(type) & ref(token, "?").optional() & (ref(EXTENDS) & ref(type)).optional();
+    Parser<dynamic> argumentType() => ref(type) & ref(token, "?").optional() & (ref(EXTENDS) & ref(KEYOF).optional() & ref(type)).optional();
     /// parameter list for type arguments
     Parser<dynamic> argumentTypeList() => argumentType().separatedBy(ref(token, ","), includeSeparators: false);
     /// generic type block
@@ -123,14 +149,11 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// generic list for definitions <T extends whatever>
     Parser<dynamic> typeParameters() => ref(token, "<") & ref(typeParameter) & (ref(token, ",") & ref(typeParameter)).star() & ref(token, ">");
 
-    /// map object(?)
-    Parser<dynamic> objectType() => ref(token, "{") & ref(field).plus() & ref(token, "}") & ref(token, "[]").star();
-
     /// lambda
-    Parser<dynamic> lambda() => (ref(functionArguments) & ref(token, "=>") & ref(type)) | (ref(token, "(") & ref(lambda) & (ref(token, ")")) & (ref(token, "[]"))) | (ref(token, "{") & ref(functionArguments) & ref(token, ":") & ref(type) & ref(token, ";") & ref(token, "}"));
+    Parser<dynamic> lambda() => (ref(functionArguments) & ref(token, "=>") & ref(type)) | (ref(token, "(") & ref(lambda) & (ref(token, ")")) & (ref(ARRAY_BRACKETS))) | (ref(token, "{") & ref(functionArguments) & ref(token, ":") & ref(type) & ref(token, ";") & ref(token, "}"));
 
     /// module declaration
-    Parser<dynamic> module() => ref(DOC_COMMENT).optional() & ref(DECLARE) & ref(MODULE) & ref(identifier) & ref(moduleBody);
+    Parser<dynamic> module() => ref(DOC_COMMENT).optional() & ref(DECLARE) & ref(MODULE) & ref(qualified) & ref(moduleBody);
     /// module enclosure
     Parser<dynamic> moduleBody() => ref(token, "{") & ref(moduleContent).star() & ref(token, "}");
     /// things allowed to be inside a module
@@ -157,11 +180,35 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(token, ";");
 
     /// type declaration, union or otherwise
-    Parser<dynamic> typeDeclaration() => ref(typeUnionDeclaration) | ref(typeThingy);
+    Parser<dynamic> typeDeclaration() => ref(typeUnionDeclaration) | ref(typeThingy) | ref(otherTypeThingy);
     /// a type union
-    Parser<dynamic> typeUnionDeclaration() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(type).separatedBy(ref(token, "|"), includeSeparators: false) & ref(token, ";");
+    Parser<dynamic> typeUnionDeclaration() =>
+        ref(DOC_COMMENT).optional() &
+        ref(EXPORT).optional() &
+        ref(TYPE) &
+        ref(typeNoLambda) &
+        ref(token, "=") &
+        ref(token,"|").optional() &
+        (ref(type) | ref(stringPrimitive)).separatedBy(ref(token, "|"), includeSeparators: false) &
+        ref(token, ";");
     /// that other weird type thing
-    Parser<dynamic> typeThingy() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(TYPE) & ref(typeNoLambda) & ref(token, "=") & ref(constrainedObject) & ref(token, ";");
+    Parser<dynamic> typeThingy() =>
+        ref(DOC_COMMENT).optional() &
+        ref(EXPORT).optional() &
+        ref(TYPE) &
+        ref(typeNoLambda) &
+        ref(token, "=") &
+        ref(constrainedObject) &
+        ref(token, ";");
+    /// some kind of type modifier... we really don't care about these for dart so I guess we can just kinda... dispose of them?
+    Parser<dynamic> otherTypeThingy() =>
+        ref(DOC_COMMENT).optional() &
+        ref(EXPORT).optional() &
+        ref(TYPE) &
+        ref(typeNoLambda) &
+        ref(token, "=") &
+        ref(token, char(";").neg().starLazy(char(";")).flatten()) &
+        ref(token, ";");
 
 
     /// index type query operator: keyof THING
@@ -172,7 +219,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// object with specific field types, including index query stuff...
     Parser<dynamic> constrainedObject() =>
         ref(token, "{") &
-        ref(constrainedObjectLine).star() &
+        (ref(constrainedObjectLine) | ref(objectKeyDefinition)| ref(field) | ref(method) ).star() &
         ref(token, "}");
     /// a line inside a constrained object?
     Parser<dynamic> constrainedObjectLine() =>
@@ -187,9 +234,10 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(constrainedObjectType) &
         ref(token, ";");
     Parser<dynamic> constrainedObjectType() => ref(constrainedObjectTypeSingle).separatedBy(ref(token, "|"), includeSeparators: false);
-    Parser<dynamic> constrainedObjectTypeSingle() => ref(indexAccess) | (ref(qualified) & ref(constrainedObjectTypeArguments).optional() & ref(token, "[]").optional());
+    Parser<dynamic> constrainedObjectTypeSingle() => ref(indexAccess) | (ref(qualified) & ref(constrainedObjectTypeArguments).optional() & ref(token, "[]").optional()) | ref(constrainedObject);
     Parser<dynamic> constrainedObjectTypeArguments() => ref(token, '<') & ref(constrainedObjectTypeList) & ref(token, '>');
     Parser<dynamic> constrainedObjectTypeList() => ref(constrainedObjectType).separatedBy(ref(token, ","), includeSeparators: false);
+    Parser<dynamic> objectKeyDefinition() => ref(stringPrimitive) & ref(token, ":") & (ref(type) | ref(ARRAY_BRACKETS)) & ref(token, ";");
 
     /// interface, inside a module
     Parser<dynamic> interfaceDeclaration() => ref(DOC_COMMENT).optional() & ref(EXPORT).optional() & ref(INTERFACE) & ref(typeNoLambda) & (ref(EXTENDS) & ref(typeNoLambda)).optional() & ref(token, "{") & ref(interfaceContent).star() & ref(token, "}");
@@ -218,7 +266,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> constructor() => ref(DOC_COMMENT).optional() & ref(PRIVATE).optional() & ref(CONSTRUCTOR) & ref(functionArguments) & ref(token, ";");
 
     /// a single name : type argument pair
-    Parser<dynamic> functionArgument() => ref(DOC_COMMENT).optional() & ref(identifier) & ref(token, "?").optional() & ref(token, ":") & ref(type);
+    Parser<dynamic> functionArgument() => ref(DOC_COMMENT).optional() & ((ref(identifier) & ref(token, "?").optional()) | ref(token, "...args")) & ref(token, ":") & (ref(type) | ref(stringPrimitive));
     /// a single name : type argument pair
     Parser<dynamic> functionArgumentList() => ref(functionArgument).separatedBy(ref(token, ","), includeSeparators: false);
     /// a list of name : type pairs
@@ -235,8 +283,8 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(READONLY).optional() &
         ref(identifier) &
         ref(token, "?").optional() &
-        (ref(token, ":") & ((ref(TYPEOF) & ref(qualified)) | ref(type) | ref(constrainedObject))).optional() &
-        ref(token, ";");
+        (((ref(token, ":") & ((ref(TYPEOF) & ref(qualified)) | ref(type) | ref(stringUnion) | ref(constrainedObject) | ref(ARRAY_BRACKETS))) & ref(token, ";").optional())
+            | ref(token, ";"));
     /// a class getter method
     Parser<dynamic> getter() =>
         ref(DOC_COMMENT).optional() &
@@ -246,7 +294,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(GET) &
         ref(identifier) &
         ref(token, "()") &
-        ref(token, ":") & ref(type) &
+        (ref(token, ":") & ref(type)).optional() &
         ref(token, ";");
     /// a class setter method
     Parser<dynamic> setter() =>
@@ -291,6 +339,19 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(token, "=") &
         ref(token, any()).starLazy(char(",") | char("}")) &
         ref(token, ",").optional();
+
+    /// top level variable declaration
+    Parser<dynamic> variableDeclaration() =>
+        ref(DOC_COMMENT).optional() &
+        ref(DECLARE) &
+        ref(VAR) &
+        ref(identifier) &
+        ref(token, ":") &
+        (ref(constrainedObject)) &
+        ref(token, ";");
+
+    /// top level class declaration
+    Parser<dynamic> classTopLevel() => ref(DECLARE) & ref(classDeclaration);
 
     //#############################################################################
 
