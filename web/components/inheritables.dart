@@ -1,19 +1,25 @@
 import "components.dart";
 
-class InheritableDef extends Component {
-    final Set<TypeRef<InheritableDef>> inherits = <TypeRef<InheritableDef>>{};
-    Iterable<ClassRef> extend;
-    Iterable<InterfaceRef> implement;
+class TypeDef extends Component {
+    final Set<TypeRef> inherits = <TypeRef>{};
+    Iterable<TypeRef> extend;
+    Iterable<TypeRef> implement;
 
-    final Set<GenericRef> generics = <GenericRef>{};
+    final Set<TypeRef> generics = <TypeRef>{};
+    final Set<Member> members = <Member>{};
 
-    InheritableDef() {
-        extend = inherits.whereType();
-        implement = inherits.whereType();
+    TypeDef() {
+        extend = inherits.where((TypeRef ref) => ref.type != null && ref.type is ClassDef);
+        implement = inherits.where((TypeRef ref) => ref.type != null && ref.type is InterfaceDef);
     }
+
+    @override
+    String toString() => "${super.toString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}:$members)";
 }
 
-class ClassDef extends InheritableDef {
+class ClassDef extends TypeDef {
+    Constructor constructor;
+
     @override
     void processList(List<dynamic> input) {
 
@@ -24,18 +30,33 @@ class ClassDef extends InheritableDef {
         // 3 class keyword
         // 4 name and generics
         this.name = input[4].name;
-
+        this.generics.addAll(input[4].generics);
         // 5 extends
+        if (input[5] != null) {
+            this.inherits.add(input[5][1]);
+        }
         // 6 implements
+        if (input[6] != null) {
+            for (final dynamic item in input[6][1]) {
+                this.inherits.add(item);
+            }
+        }
         // 7 open brace
-        // 8 entries before constructor
-        // 9 constructor
-        // 10 entries after constructor
+        // 8 entries
+        for(final dynamic item in input[8]) {
+            if (item is Constructor) {
+                this.constructor = item;
+            } else if (item is Member) {
+                this.members.add(item);
+            } else {
+                print("Class non-member: $item");
+            }
+        }
         // 11 close brace
     }
 }
 
-class InterfaceDef extends InheritableDef {
+class InterfaceDef extends TypeDef {
     @override
     void processList(List<dynamic> input) {
 
@@ -44,9 +65,21 @@ class InterfaceDef extends InheritableDef {
         // 1 export?
         // 2 interface keyword
         // 3 name and generics
+        this.name = input[3].name;
+        this.generics.addAll(input[3].generics);
         // 4 extends
+        if (input[4] != null) {
+            this.inherits.add(input[4][1]);
+        }
         // 5 open brace
-        // 6 entries before constructor
+        // 6 entries
+        for(final dynamic item in input[6]) {
+            if (item is Member) {
+                this.members.add(item);
+            } else {
+                print("Interface non-member: $item");
+            }
+        }
         // 7 close brace
     }
 }

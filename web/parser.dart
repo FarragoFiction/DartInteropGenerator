@@ -17,7 +17,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         } else if (data.length == 1) {
             return data[0];
         } else {
-            return "(union)";
+            return new TypeRef()..type = StaticTypes.typeDynamic..notes.add("Union:")..notes.add(data.toString());
         }
     }
 
@@ -41,7 +41,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
             return data;
         } else {
             if(data[1] != null && data[1] is TypeRef) {
-                data[1].array = data[3] != null;
+                data[1].array = data[3].length;
             }
             return data[1];
         }
@@ -52,7 +52,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> typeNoLambda() => super.typeNoLambda().map(union);
     @override
     Parser<dynamic> typeNoLambdaSingle() => super.typeNoLambdaSingle().map((dynamic data) {
-        final UnresolvedRef ref = new UnresolvedRef(data[0].join("."));
+        final TypeRef ref = new TypeRef()..name=data[0].join(".");
         //print(data);
         if (data[1] != null) {
             final List<dynamic> items = data[1][1];
@@ -64,16 +64,34 @@ class TSDParserDefinition extends TSDGrammarDefinition {
                 ref.generics.add(item[0]);
             }
         }
-        ref.array = data[2] != null;
+        ref.array = data[2].length;
         return ref;
     });
+    
+    @override
+    Parser<dynamic> lambda() => super.lambda().map((dynamic data) => new TypeRef()..type = StaticTypes.typeDynamic..notes.add(data.toString()) ); //TODO: give lambdas a proper output
+
+    // function stuff
+    @override
+    Parser<dynamic> functionArgument() => super.functionArgument().map(process(() => new Parameter()));
 
     // main objects
-    //@override
-    //Parser<dynamic> module() => super.module().map(process(new Module()));
+    @override
+    Parser<dynamic> module() => super.module().map(process(() => new Module()));
     @override
     Parser<dynamic> classDeclaration() => super.classDeclaration().map(process(() => new ClassDef()));
     @override
     Parser<dynamic> interfaceDeclaration() => super.interfaceDeclaration().map(process(() => new InterfaceDef()));
 
+    // members
+    @override
+    Parser<dynamic> constructor() => super.constructor().map(process(() => new Constructor()));
+    @override
+    Parser<dynamic> field() => super.field().map(process(() => new Field()));
+    @override
+    Parser<dynamic> method() => super.method().map(process(() => new Method()));
+    @override
+    Parser<dynamic> getter() => super.getter().map(process(() => new Getter()));
+    @override
+    Parser<dynamic> setter() => super.setter().map(process(() => new Setter()));
 }

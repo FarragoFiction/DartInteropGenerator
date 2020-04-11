@@ -13,12 +13,15 @@ class Module extends Component {
         // 2 module keyword
 
         // 3 name
+        this.name = input[3].join(".");
 
         // 4 body
         final List<dynamic> content = input[4][1]; // between braces
         for (final dynamic object in content) {
             if (object is Component) {
                 components.add(object);
+            } else {
+                print("Module non-component: $object");
             }
         }
     }

@@ -1,10 +1,14 @@
+export "functions.dart";
 export "inheritables.dart";
+export "members.dart";
 export "module.dart";
 export "reference.dart";
+export "statictypes.dart";
 
 class Component {
     String name;
     List<String> docs;
+    final List<String> notes = <String>[];
 
     void process(dynamic input) {
         if (!(input is List<dynamic>)) { return; }
