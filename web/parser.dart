@@ -32,6 +32,14 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> typeUnion() => super.typeUnion().map(union);
     @override
     Parser<dynamic> typeIntersection() => super.typeIntersection().map(union);
+    @override
+    Parser<dynamic> stringUnion() => super.stringUnion().map((dynamic data) {
+        if (data is List<dynamic>) {
+            return new TypeRef()..type=StaticTypes.typeString..notes.add(data.toString());
+        } else {
+            print("Invalid string union $data");
+        }
+    });
 
     @override
     Parser<dynamic> type() => super.type().map((dynamic data) {
@@ -57,16 +65,18 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         if (data[1] != null) {
             final List<dynamic> items = data[1][1];
             for(final dynamic item in items) {
-                // 0 type
-                // 1 optional ? mark
-                // 2 extends keyof? type
-
-                ref.generics.add(item[0]);
+                if (item is GenericRef) {
+                    ref.generics.add(item);
+                } else {
+                    print("Generic non-TypeRef: $item in ${data[1][1]} -> $data");
+                }
             }
         }
         ref.array = data[2].length;
         return ref;
     });
+    @override
+    Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
     
     @override
     Parser<dynamic> lambda() => super.lambda().map((dynamic data) => new TypeRef()..type = StaticTypes.typeDynamic..notes.add(data.toString()) ); //TODO: give lambdas a proper output

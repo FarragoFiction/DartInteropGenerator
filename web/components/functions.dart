@@ -23,4 +23,30 @@ class Parameter extends Component {
             // a string...
         }
     }
+
+    @override
+    String toString() => "$type $name";
+}
+
+class GenericRef extends Component {
+    TypeRef type;
+    TypeRef extend;
+
+    @override
+    void processList(List<dynamic> input) {
+        // 0 type
+        if (input[0] is TypeRef) {
+            this.type = input[0];
+        } else {
+            print("GenericRef non-type: ${input[0]} in $input");
+        }
+        // 1 optional
+        // 2 extends type
+        if (input[2] != null) {
+            this.extend = input[2][2];
+        }
+    }
+
+    @override
+    String toString() => "$type${this.extend != null ? " extends $extend" : ""}";
 }

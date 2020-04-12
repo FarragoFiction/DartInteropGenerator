@@ -6,7 +6,7 @@ class Member extends Component {
     bool static;
     bool abstract;
 
-    bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_") || this.docs.contains("@hidden");
+    bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_");
 }
 
 class Field extends Member {
@@ -31,14 +31,19 @@ class Field extends Member {
             if (input[7][1] is TypeRef) {
                 this.type = input[7][1];
             } else {
-                print("Field non-type: ${input[7][1]}");
+                print("Field non-type: ${input[7][1]} in ${input[7]} -> $input");
             }
         }
     }
+
+    @override
+    String displayString() => "${super.displayString()}${type == null ? "" : ": $type"}";
 }
 
 class Method extends Member {
     TypeRef type;
+    Set<GenericRef> generics = <GenericRef>{};
+    Set<Parameter> arguments = <Parameter>{};
 
     @override
     void processList(List<dynamic> input) {
@@ -55,12 +60,37 @@ class Method extends Member {
         this.name = input[5];
         // 6 optional
         // 7 generics
+        if (input[7] != null) {
+            for (final dynamic item in input[7][1]) {
+                if (item is GenericRef) {
+                    this.generics.add(item);
+                } else {
+                    print("Function non-generic $item in ${input[7]} -> $input");
+                }
+            }
+        }
         // 8 arguments
+        if (input[8][1] != null) {
+            for (final dynamic item in input[8][1]) {
+                if (item is Parameter) {
+                    this.arguments.add(item);
+                } else {
+                    print("Function non-parameter $item in ${input[8][1]} -> $input");
+                }
+            }
+        }
         // 9 colon
         // 10 return type
-        this.type = input[10];
+        if (input[10] is TypeRef) {
+            this.type = input[10];
+        } else {
+            print("Method non-type returned: ${input[10]} in $input");
+        }
         // 11 semicolon
     }
+
+    @override
+    String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
 }
 
 class Getter extends Member {
@@ -82,7 +112,11 @@ class Getter extends Member {
         // 6 ()
         // 7 type
         if (input[7] is List<dynamic>) {
-            this.type = input[7][1];
+            if (input[7][1] is TypeRef) {
+                this.type = input[7][1];
+            } else {
+                print("Getter non-type: ${input[7][1]} in ${input[7]} -> $input");
+            }
         }
         // 8 semicolon
     }

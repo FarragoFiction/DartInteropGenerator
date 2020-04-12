@@ -2,6 +2,7 @@ import "components.dart";
 
 abstract class StaticTypes {
     static final ClassDef typeDynamic = new ClassDef()..name="dynamic";
+    static final ClassDef typeString = new ClassDef()..name="string";
 }
 
 class Accessor {

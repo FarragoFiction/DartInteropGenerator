@@ -18,5 +18,8 @@ class Component {
     void processList(List<dynamic> input) { print("${this.runtimeType}: $input"); }
 
     @override
-    String toString() => "(${this.runtimeType} ${(this.name == null || this.name.isEmpty) ? "unnamed" : this.name})";
+    String toString() => "(${displayString()})";
+
+    String displayName() => (this.name == null || this.name.isEmpty) ? "unnamed" : this.name;
+    String displayString() => "${this.runtimeType} ${displayName()}";
 }

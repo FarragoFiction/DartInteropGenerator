@@ -5,16 +5,22 @@ class TypeDef extends Component {
     Iterable<TypeRef> extend;
     Iterable<TypeRef> implement;
 
-    final Set<TypeRef> generics = <TypeRef>{};
+    final Set<GenericRef> generics = <GenericRef>{};
     final Set<Member> members = <Member>{};
+    Iterable<Method> methods;
+    Iterable<Field> fields;
 
     TypeDef() {
         extend = inherits.where((TypeRef ref) => ref.type != null && ref.type is ClassDef);
         implement = inherits.where((TypeRef ref) => ref.type != null && ref.type is InterfaceDef);
+        methods = members.whereType();
+        fields = members.whereType();
     }
 
     @override
-    String toString() => "${super.toString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}:$members)";
+    String toString() => "${super.toString()}:$members";
+    @override
+    String displayName() => "${super.displayName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}";
 }
 
 class ClassDef extends TypeDef {
