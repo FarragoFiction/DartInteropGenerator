@@ -37,6 +37,8 @@ class GenericRef extends Component {
         // 0 type
         if (input[0] is TypeRef) {
             this.type = input[0];
+        } else if (input[0] is ArrayBrackets) {
+            this.type = input[0].toType();
         } else {
             print("GenericRef non-type: ${input[0]} in $input");
         }

@@ -49,7 +49,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
             return data;
         } else {
             if(data[1] != null && data[1] is TypeRef) {
-                data[1].array = data[3].length;
+                data[1].array = data[3].count;
             }
             return data[1];
         }
@@ -72,9 +72,16 @@ class TSDParserDefinition extends TSDGrammarDefinition {
                 }
             }
         }
-        ref.array = data[2].length;
+        ref.array = data[2].count;
         return ref;
     });
+    @override
+    Parser<dynamic> arrayBrackets() => super.arrayBrackets().map((dynamic data) => new ArrayBrackets());
+    @override
+    Parser<dynamic> arrayBracketsPlus() => super.arrayBracketsPlus().map((dynamic data) => new ArrayBrackets()..count = data.length);
+    @override
+    Parser<dynamic> arrayBracketsStar() => super.arrayBracketsStar().map((dynamic data) => new ArrayBrackets()..count = data.length);
+
     @override
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
     

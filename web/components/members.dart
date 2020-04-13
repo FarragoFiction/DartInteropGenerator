@@ -30,6 +30,8 @@ class Field extends Member {
         if (input[7] is List<dynamic>) {
             if (input[7][1] is TypeRef) {
                 this.type = input[7][1];
+            } else if (input[7][1] is ArrayBrackets) {
+                this.type = input[7][1].toType();
             } else {
                 print("Field non-type: ${input[7][1]} in ${input[7]} -> $input");
             }
@@ -83,6 +85,8 @@ class Method extends Member {
         // 10 return type
         if (input[10] is TypeRef) {
             this.type = input[10];
+        } else if (input[10] is ArrayBrackets) {
+            this.type = input[10].toType();
         } else {
             print("Method non-type returned: ${input[10]} in $input");
         }
@@ -114,6 +118,8 @@ class Getter extends Member {
         if (input[7] is List<dynamic>) {
             if (input[7][1] is TypeRef) {
                 this.type = input[7][1];
+            } else if (input[7][1] is ArrayBrackets) {
+                this.type = input[7][1].toType();
             } else {
                 print("Getter non-type: ${input[7][1]} in ${input[7]} -> $input");
             }
@@ -148,6 +154,7 @@ class Setter extends Member {
 
 class Constructor extends Component {
     bool private;
+    Set<Parameter> arguments = <Parameter>{};
 
     @override
     void processList(List<dynamic> input) {
@@ -157,6 +164,15 @@ class Constructor extends Component {
         this.private = input[1] != null;
         // 2 constructor
         // 3 args
+        if (input[3][1] != null) {
+            for (final dynamic item in input[3][1]) {
+                if (item is Parameter) {
+                    this.arguments.add(item);
+                } else {
+                    print("Constructor non-parameter $item in ${input[3][1]} -> $input");
+                }
+            }
+        }
         // 4 semicolon
     }
 }

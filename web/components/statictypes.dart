@@ -2,7 +2,8 @@ import "components.dart";
 
 abstract class StaticTypes {
     static final ClassDef typeDynamic = new ClassDef()..name="dynamic";
-    static final ClassDef typeString = new ClassDef()..name="string";
+    static final ClassDef typeString = new ClassDef()..name="String";
+    static final ClassDef typeList = new ClassDef()..name="List";
 }
 
 class Accessor {
@@ -25,4 +26,20 @@ class Accessor {
         }
         return Accessor.public;
     }
+}
+
+class ArrayBrackets {
+    int count = 0;
+
+    TypeRef toType() {
+        if (count == 0) { return null; }
+        TypeRef type = new TypeRef()..type = StaticTypes.typeDynamic;
+        for (int i=0; i<count; i++) {
+            type = new TypeRef()..type = StaticTypes.typeList..generics.add(new GenericRef()..type = type);
+        }
+        return type;
+    }
+
+    @override
+    String toString() => "A${"[]"*count}";
 }

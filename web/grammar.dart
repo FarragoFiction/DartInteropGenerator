@@ -98,20 +98,26 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> identifier() => ref(token, ref(IDENTIFIER));
 
     /// a type which also allows lambdas, for arguments and return types
-    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | (ref(token, "(") & ref(lambda) & ref(token, ")") & ref(ARRAY_BRACKETS).star()) | ref(lambda) | (ref(constrainedObject) & ref(ARRAY_BRACKETS).star());
+    Parser<dynamic> typeSingle() => ref(typeNoLambdaSingle) | (ref(token, "(") & ref(lambda) & ref(token, ")") & ref(arrayBracketsStar)) | ref(lambda) | (ref(constrainedObject) & ref(arrayBracketsStar));
     /// a type, which might be a union
-    Parser<dynamic> type() => ref(typeUnion) | (ref(token, "(") & ref(typeUnion) & ref(token, ")") & ref(ARRAY_BRACKETS).plus());
+    Parser<dynamic> type() => ref(typeUnion) | (ref(token, "(") & ref(typeUnion) & ref(token, ")") & ref(arrayBracketsPlus));
     Parser<dynamic> typeUnion() => ref(typeIntersection).separatedBy(ref(token, "|"), includeSeparators: false);
     Parser<dynamic> typeNoLambda() => (ref(typeNoLambdaSingle)).separatedBy(ref(token, "|"), includeSeparators: false) | (ref(token, "(") & ref(type) & ref(token, ")")) | ref(typeNoLambdaSingle);
     Parser<dynamic> typeIntersection() => (ref(typeSingle)).separatedBy(ref(token, "&"), includeSeparators: false);
 
     /// a set of different string options...
     Parser<dynamic> stringUnion() => ref(stringPrimitive).separatedBy(ref(token,"|"), includeSeparators: false);
+    /// at least one set of array brackets
+    Parser<dynamic> arrayBracketsPlus() => ref(ARRAY_BRACKETS).plus();
+    /// any number of array brackets
+    Parser<dynamic> arrayBracketsStar() => ref(ARRAY_BRACKETS).star();
+    /// exactly one set of array brackets
+    Parser<dynamic> arrayBrackets() => ref(ARRAY_BRACKETS);
 
     /// thing.thing.thing etc
     Parser<dynamic> qualified() => ref(identifier).separatedBy(ref(token, "."), includeSeparators: false); //ref(identifier) & (ref(token, '.') & ref(identifier)).star();
     /// full type name with generics and array-ness
-    Parser<dynamic> typeNoLambdaSingle() => ref(qualified) & ref(typeArguments).optional() & ref(ARRAY_BRACKETS).star();
+    Parser<dynamic> typeNoLambdaSingle() => ref(qualified) & ref(typeArguments).optional() & ref(arrayBracketsStar);
     /// parameter with optional ? on the end
     Parser<dynamic> argumentType() => ref(type) & ref(token, "?").optional() & (ref(EXTENDS) & ref(KEYOF).optional() & ref(type)).optional();
     /// parameter list for type arguments
@@ -125,7 +131,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> typeParameters() => ref(token, "<") & ref(typeParameter) & (ref(token, ",") & ref(typeParameter)).star() & ref(token, ">");
 
     /// lambda
-    Parser<dynamic> lambda() => (ref(functionArguments) & ref(token, "=>") & ref(type)) | (ref(token, "(") & ref(lambda) & (ref(token, ")")) & (ref(ARRAY_BRACKETS))) | (ref(token, "{") & ref(functionArguments) & ref(token, ":") & ref(type) & ref(token, ";") & ref(token, "}"));
+    Parser<dynamic> lambda() => (ref(functionArguments) & ref(token, "=>") & ref(type)) | (ref(token, "(") & ref(lambda) & (ref(token, ")")) & ref(arrayBracketsPlus)) | (ref(token, "{") & ref(functionArguments) & ref(token, ":") & ref(type) & ref(token, ";") & ref(token, "}"));
 
     /// module declaration
     Parser<dynamic> module() => ref(DOC_COMMENT).optional() & ref(DECLARE) & ref(MODULE) & ref(qualified) & ref(moduleBody);
@@ -212,7 +218,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> constrainedObjectTypeSingle() => ref(indexAccess) | (ref(qualified) & ref(constrainedObjectTypeArguments).optional() & ref(token, "[]").optional()) | ref(constrainedObject);
     Parser<dynamic> constrainedObjectTypeArguments() => ref(token, '<') & ref(constrainedObjectTypeList) & ref(token, '>');
     Parser<dynamic> constrainedObjectTypeList() => ref(constrainedObjectType).separatedBy(ref(token, ","), includeSeparators: false);
-    Parser<dynamic> objectKeyDefinition() => ref(stringPrimitive) & ref(token, ":") & (ref(type) | ref(ARRAY_BRACKETS)) & ref(token, ";");
+    Parser<dynamic> objectKeyDefinition() => ref(stringPrimitive) & ref(token, ":") & (ref(type) | ref(arrayBrackets)) & ref(token, ";");
 
     /// interface, inside a module
     Parser<dynamic> interfaceDeclaration() =>
@@ -264,7 +270,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(READONLY).optional() &
         ref(identifier) &
         ref(token, "?").optional() &
-        (((ref(token, ":") & ((ref(TYPEOF) & ref(qualified)) | ref(type) | ref(stringUnion) | ref(constrainedObject) | ref(ARRAY_BRACKETS))) & ref(token, ";").optional())
+        (((ref(token, ":") & ((ref(TYPEOF) & ref(qualified)) | ref(type) | ref(stringUnion) | ref(constrainedObject) | ref(arrayBrackets))) & ref(token, ";").optional())
         | ref(token, ";"));
     /// a class getter method
     Parser<dynamic> getter() =>
