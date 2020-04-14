@@ -12,12 +12,16 @@ class TSDParserDefinition extends TSDGrammarDefinition {
 
     T Function(dynamic data) process<T extends Component>(T Function() object) => (dynamic data) => object()..process(data);
     dynamic union(dynamic data) {
-        if (data.length < 1) {
+        if (data == null || data.length < 1) {
             return null;
         } else if (data.length == 1) {
             return data[0];
         } else {
-            return new TypeRef()..type = StaticTypes.typeDynamic..notes.add("Union:")..notes.add(data.toString());
+            final TypeUnionRef ref = new TypeUnionRef();
+            for (final dynamic item in data) {
+                ref.unionRefs.add(item);
+            }
+            return ref;
         }
     }
 
@@ -43,10 +47,11 @@ class TSDParserDefinition extends TSDGrammarDefinition {
 
     @override
     Parser<dynamic> type() => super.type().map((dynamic data) {
+        if (data == null) { return null; }
         if (data is TypeRef) {
             return data;
-        } else if (data.length == 1) {
-            return data;
+        } else if (data is List<dynamic> && data.length == 1) {
+            return data[0];
         } else {
             if(data[1] != null && data[1] is TypeRef) {
                 data[1].array = data[3].count;
@@ -99,6 +104,20 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> classDeclaration() => super.classDeclaration().map(process(() => new ClassDef()));
     @override
     Parser<dynamic> interfaceDeclaration() => super.interfaceDeclaration().map(process(() => new InterfaceDef()));
+    @override
+    Parser<dynamic> enumDeclaration() => super.enumDeclaration().map(process(() => new Enum()));
+
+    /*@override
+    Parser<dynamic> typeDeclaration() => super.typeDeclaration().map((dynamic data) {
+        if (data is TypeModifier) { return null; } // we don't care about these for dart maybe?
+        return data;
+    });*/
+    @override
+    Parser<dynamic> typeUnionDeclaration() => super.typeUnionDeclaration().map(process(() => new TypeUnionDef()));
+    @override
+    Parser<dynamic> typeThingy() => super.typeThingy().map(process(() => new TypeThingy()));
+    @override
+    Parser<dynamic> otherTypeThingy() => super.otherTypeThingy().map(process(() => new TypeModifier()));
 
     // members
     @override

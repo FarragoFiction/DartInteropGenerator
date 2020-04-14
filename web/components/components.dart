@@ -1,9 +1,11 @@
+export "enums.dart";
 export "functions.dart";
 export "inheritables.dart";
 export "members.dart";
 export "module.dart";
 export "reference.dart";
 export "statictypes.dart";
+export "typedeclaration.dart";
 
 class Component {
     String name;

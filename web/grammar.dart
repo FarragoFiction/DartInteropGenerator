@@ -170,7 +170,8 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(typeNoLambda) &
         ref(token, "=") &
         ref(token,"|").optional() &
-        (ref(type) | ref(stringPrimitive)).separatedBy(ref(token, "|"), includeSeparators: false) &
+        //(ref(type) | ref(stringPrimitive)).separatedBy(ref(token, "|"), includeSeparators: false) &
+        (ref(typeUnion) | ref(stringUnion)) &
         ref(token, ";");
     /// that other weird type thing
     Parser<dynamic> typeThingy() =>
@@ -324,7 +325,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(DOC_COMMENT).optional() &
         ref(identifier) &
         ref(token, "=") &
-        ref(token, any()).starLazy(char(",") | char("}")) &
+        ref(DIGIT).plus().flatten().map(int.parse) &
         ref(token, ",").optional();
 
     /// top level variable declaration

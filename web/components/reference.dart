@@ -9,3 +9,10 @@ class TypeRef extends Component {
     @override
     String toString() => "(${type != null ? type.name : (name == null ? "unnamed" : name)}${generics.isEmpty ? "" : "<${generics.join(",")}>"})";
 }
+
+class TypeUnionRef extends TypeRef {
+    Set<TypeRef> unionRefs = <TypeRef>{};
+
+    @override
+    String toString() => "( ${this.unionRefs.join(" | ")} )";
+}
