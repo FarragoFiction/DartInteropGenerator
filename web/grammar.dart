@@ -92,7 +92,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     //#############################################################################
 
     /// overall file structure
-    Parser<dynamic> tsdFile() => ( ref(module) | ref(interfaceTopLevel) | ref(variableDeclaration) | ref(typeDeclaration) | ref(classTopLevel) ).star();
+    Parser<dynamic> tsdFile() => ( ref(module) | ref(interfaceTopLevel) | ref(constant) | ref(typeDeclaration) | ref(classTopLevel) ).star();
 
     /// a valid single name, starting with a letter, can have numbers and underscores
     Parser<dynamic> identifier() => ref(token, ref(IDENTIFIER));
@@ -147,7 +147,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// consts in modules
     Parser<dynamic> constant() =>
         ref(DOC_COMMENT).optional() &
-        ref(EXPORT).optional() &
+        (ref(EXPORT) | ref(DECLARE)).optional() &
         (ref(CONST) | ref(LET) | ref(VAR)) &
         ref(identifier) &
         ((ref(token, ":") & ref(type)) | (ref(token, "=") & ref(token, any()).starLazy(char(";")))) &
@@ -202,10 +202,23 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// indexed access operator: T[\K]
     Parser<dynamic> indexAccess() => ref(identifier) & ref(token, "[") & ref(identifier) & ref(token, "]");
 
+    /// array access?
+    Parser<dynamic> arrayAccess() =>
+        ref(DOC_COMMENT).optional() &
+        ref(READONLY).optional() &
+        ref(token, "[") &
+        ref(identifier) &
+        ref(token, ":") &
+        ref(constrainedObjectType) &
+        ref(token, "]") &
+        ref(token, ":") &
+        ref(constrainedObjectType) &
+        ref(token, ";");
+
     /// object with specific field types, including index query stuff...
     Parser<dynamic> constrainedObject() =>
         ref(token, "{") &
-        (ref(constrainedObjectLine) | ref(objectKeyDefinition)| ref(field) | ref(method) ).star() &
+        (ref(arrayAccess) | ref(constrainedObjectLine) | ref(objectKeyDefinition)| ref(field) | ref(method) ).star() &
         ref(token, "}");
     /// a line inside a constrained object?
     Parser<dynamic> constrainedObjectLine() =>
@@ -238,7 +251,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// interface, top level
     Parser<dynamic> interfaceTopLevel() => ref(interfaceDeclaration);
     /// stuff that can go inside an interface
-    Parser<dynamic> interfaceContent() => ref(field) | ref(method) | ref(constrainedObjectLine);
+    Parser<dynamic> interfaceContent() => ref(field) | ref(method) | ref(arrayAccess);
 
     /// class, inside a module
     Parser<dynamic> classDeclaration() =>
@@ -253,7 +266,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(classContent).star() &
         ref(token, "}");
     /// stuff that can go inside a class
-    Parser<dynamic> classContent() => ref(constructor) | ref(getter) | ref(setter) | ref(field) | ref(method) | ref(constrainedObjectLine) | ref(DOC_COMMENT); // make sure comment goes last
+    Parser<dynamic> classContent() => ref(constructor) | ref(getter) | ref(setter) | ref(field) | ref(method) | ref(arrayAccess) | ref(DOC_COMMENT); // make sure comment goes last
     /// class constructor
     Parser<dynamic> constructor() => ref(DOC_COMMENT).optional() & ref(PRIVATE).optional() & ref(CONSTRUCTOR) & ref(functionArguments) & ref(token, ";");
 
@@ -331,16 +344,6 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(token, "=") &
         ref(DIGIT).plus().flatten().map(int.parse) &
         ref(token, ",").optional();
-
-    /// top level variable declaration
-    Parser<dynamic> variableDeclaration() =>
-        ref(DOC_COMMENT).optional() &
-        ref(DECLARE) &
-        ref(VAR) &
-        ref(identifier) &
-        ref(token, ":") &
-        (ref(constrainedObject)) &
-        ref(token, ";");
 
     /// top level class declaration
     Parser<dynamic> classTopLevel() => ref(DECLARE) & ref(classDeclaration);

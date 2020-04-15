@@ -6,6 +6,7 @@ export "members.dart";
 export "module.dart";
 export "reference.dart";
 export "statictypes.dart";
+export "tsdfile.dart";
 export "typedeclaration.dart";
 export "variable.dart";
 

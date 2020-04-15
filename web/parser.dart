@@ -41,6 +41,9 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         }
     }
 
+    @override
+    Parser<dynamic> tsdFile() => super.tsdFile().map(process(() => new TSDFile()));
+
     // reduction of text
     @override
     Parser<dynamic> DOC_COMMENT() => super.DOC_COMMENT().map((dynamic data) => new List<String>.from(data[1]));
@@ -116,9 +119,6 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     @override
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
     
-    //@override
-    //Parser<dynamic> lambda() => super.lambda()
-
     @override
     Parser<dynamic> lambdaDef() => super.lambdaDef().map(handleErrors((dynamic data) => new LambdaRef()..notes.add(data.toString()) )); //TODO: give lambdas a proper output
     @override
@@ -151,12 +151,9 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> enumDeclaration() => super.enumDeclaration().map(process(() => new Enum()));
     @override
     Parser<dynamic> constrainedObject() => super.constrainedObject().map(process(() => new ConstrainedObject()));
+    @override
+    Parser<dynamic> classTopLevel() => super.classTopLevel().map(handleErrors((dynamic data) => data[1]));
 
-    /*@override
-    Parser<dynamic> typeDeclaration() => super.typeDeclaration().map((dynamic data) {
-        if (data is TypeModifier) { return null; } // we don't care about these for dart maybe?
-        return data;
-    });*/
     @override
     Parser<dynamic> typeUnionDeclaration() => super.typeUnionDeclaration().map(process(() => new TypeUnionDef()));
     @override
@@ -177,4 +174,8 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> setter() => super.setter().map(process(() => new Setter()));
     @override
     Parser<dynamic> constant() => super.constant().map(process(() => new Variable()));
+    @override
+    Parser<dynamic> functionDeclaration() => super.functionDeclaration().map(process(() => new FunctionDeclaration()));
+    @override
+    Parser<dynamic> arrayAccess() => super.arrayAccess().map(process(() => new ArrayAccess()));
 }

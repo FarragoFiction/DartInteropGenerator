@@ -32,6 +32,8 @@ class Field extends Member {
                 this.type = input[7][1];
             } else if (input[7][1] is ArrayBrackets) {
                 this.type = input[7][1].toType();
+            } else if (input[7][1] is List<dynamic>) {
+                this.type = new TypeRef()..type=StaticTypes.typeDynamic..notes.add(input[7][1].join(" "));
             } else {
                 print("Field non-type: ${input[7][1]} in ${input[7]} -> $input");
             }
@@ -174,5 +176,23 @@ class Constructor extends Component {
             }
         }
         // 4 semicolon
+    }
+}
+
+class ArrayAccess extends Member {
+    @override
+    void processList(List<dynamic> input) {
+        // 0 docs
+        this.docs = input[0];
+        // 1 readonly
+        // 2 [
+        // 3 var name
+        // 4 :
+        // 5 key type
+        this.name = input[5].toString();
+        // 6 ]
+        // 7 :
+        // 8 return type
+        // 9 semicolon
     }
 }

@@ -1,6 +1,55 @@
 
 import "components.dart";
 
+class FunctionDeclaration extends Component {
+    final Set<GenericRef> generics = <GenericRef>{};
+    final Set<Parameter> arguments = <Parameter>{};
+    TypeRef type;
+
+    @override
+    void processList(List<dynamic> input) {
+        // 0 docs
+        this.docs = input[0];
+        // 1 export
+        // 2 function
+        // 3 name
+        this.name = input[3];
+        // 4 type arguments
+        if (input[4] != null) {
+            for (final dynamic item in input[4][1]) {
+                if (item is GenericRef) {
+                    this.generics.add(item);
+                } else {
+                    print("Function non-generic $item in ${input[4]} -> $input");
+                }
+            }
+        }
+        // 5 function arguments
+        if (input[5][1] != null) {
+            for (final dynamic item in input[5][1]) {
+                if (item is Parameter) {
+                    this.arguments.add(item);
+                } else {
+                    print("Function non-parameter $item in ${input[5][1]} -> $input");
+                }
+            }
+        }
+        // 6 :
+        // 7 return type
+        if (input[7] is TypeRef) {
+            this.type = input[7];
+        } else if (input[7] is ArrayBrackets) {
+            this.type = input[7].toType();
+        } else {
+            print("Method non-type returned: ${input[7]} in $input");
+        }
+        // 8 semicolon
+    }
+
+    @override
+    String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
+}
+
 class Parameter extends Component {
     TypeRef type;
 

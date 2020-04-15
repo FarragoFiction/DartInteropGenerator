@@ -272,6 +272,13 @@ declare module BABYLON {
          */
         get onprogress(): ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
         set onprogress(value: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null);
+
+
+        /**
+         * Extracts text content from a DOM element hierarchy
+         * Back Compat only, please use DomManagement.GetDOMTextContent instead.
+         */
+        static GetDOMTextContent: typeof DomManagement.GetDOMTextContent;
     }
 }
 
@@ -337,3 +344,51 @@ declare module BABYLON {
         step?: number;
     }
 }
+declare module BABYLON {
+    /**
+     * Extracts minimum and maximum values from a list of indexed positions
+     * @param positions defines the positions to use
+     * @param indices defines the indices to the positions
+     * @param indexStart defines the start index
+     * @param indexCount defines the end index
+     * @param bias defines bias value to add to the result
+     * @return minimum and maximum values
+     */
+    export function extractMinAndMaxIndexed(positions: FloatArray, indices: IndicesArray, indexStart: number, indexCount: number, bias?: Nullable<Vector2>): {
+        minimum: Vector3;
+        maximum: Vector3;
+    };
+    /**
+     * Extracts minimum and maximum values from a list of positions
+     * @param positions defines the positions to use
+     * @param start defines the start index in the positions array
+     * @param count defines the number of positions to handle
+     * @param bias defines bias value to add to the result
+     * @param stride defines the stride size to use (distance between two positions in the positions array)
+     * @return minimum and maximum values
+     */
+    export function extractMinAndMax(positions: FloatArray, start: number, count: number, bias?: Nullable<Vector2>, stride?: number): {
+        minimum: Vector3;
+        maximum: Vector3;
+    };
+
+}
+
+/**
+ * Represents a map of input types to input instance or input index to input instance.
+ */
+export interface CameraInputsMap<TCamera extends Camera> {
+    /**
+     * Accessor to the input by input type.
+     */
+    [name: string]: ICameraInput<TCamera>;
+    /**
+     * Accessor to the input by input index.
+     */
+    [idx: number]: ICameraInput<TCamera>;
+}
+
+declare var XRWebGLLayer: {
+    prototype: XRWebGLLayer;
+    new(session: XRSession, context: WebGLRenderingContext | undefined, options?: XRWebGLLayerOptions): XRWebGLLayer;
+};

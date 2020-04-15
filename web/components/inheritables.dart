@@ -56,6 +56,8 @@ class ClassDef extends TypeDef {
                 this.constructor = item;
             } else if (item is Member) {
                 this.members.add(item);
+            } else if (item is List<String>) {
+                // stray comment, discard unfortunately
             } else {
                 print("Class non-member: $item");
             }
@@ -84,6 +86,8 @@ class InterfaceDef extends TypeDef {
         for(final dynamic item in input[6]) {
             if (item is Member) {
                 this.members.add(item);
+            } else if (item is List<String>) {
+                // stray comment, discard unfortunately
             } else {
                 print("Interface non-member: $item");
             }
