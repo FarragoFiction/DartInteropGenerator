@@ -17,8 +17,10 @@ class TypeDef extends Component {
         fields = members.whereType();
     }
 
+    Iterable<String> getPrintComponents() => members.map((Member m) => m.toString());
+
     @override
-    String toString() => "${super.toString()}:$members";
+    String toString() => "${super.toString()}:{${getPrintComponents().join(", ")}}";
     @override
     String displayName() => "${super.displayName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}";
 }

@@ -10,7 +10,19 @@ class TSDParser extends GrammarParser {
 class TSDParserDefinition extends TSDGrammarDefinition {
     const TSDParserDefinition();
 
-    T Function(dynamic data) process<T extends Component>(T Function() object) => (dynamic data) => object()..process(data);
+    static T printErrors<T>(T Function(dynamic data) func, dynamic data) {
+        try {
+            return func(data);
+        // ignore: avoid_catching_errors
+        } on Error {
+            print(data);
+            print(func);
+            rethrow;
+        }
+    }
+    dynamic Function(dynamic data) handleErrors(dynamic Function(dynamic data) func) => (dynamic data) => printErrors(func, data);
+
+    T Function(dynamic data) process<T extends Component>(T Function() object) => (dynamic data) => printErrors((dynamic data) => object()..process(data), data);
     dynamic union(dynamic data) {
         if (data == null || data.length < 1) {
             return null;
@@ -19,7 +31,11 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         } else {
             final TypeUnionRef ref = new TypeUnionRef();
             for (final dynamic item in data) {
-                ref.unionRefs.add(item);
+                if (item is TypeRef) {
+                    ref.unionRefs.add(item);
+                } else {
+                    print("Union invalid TypeRef: $item in $data");
+                }
             }
             return ref;
         }
@@ -33,20 +49,20 @@ class TSDParserDefinition extends TSDGrammarDefinition {
 
     // types
     @override
-    Parser<dynamic> typeUnion() => super.typeUnion().map(union);
+    Parser<dynamic> typeUnion() => super.typeUnion().map(handleErrors(union));
     @override
-    Parser<dynamic> typeIntersection() => super.typeIntersection().map(union);
+    Parser<dynamic> typeIntersection() => super.typeIntersection().map(handleErrors(union));
     @override
-    Parser<dynamic> stringUnion() => super.stringUnion().map((dynamic data) {
+    Parser<dynamic> stringUnion() => super.stringUnion().map(handleErrors((dynamic data) {
         if (data is List<dynamic>) {
             return new TypeRef()..type=StaticTypes.typeString..notes.add(data.toString());
         } else {
             print("Invalid string union $data");
         }
-    });
+    }));
 
     @override
-    Parser<dynamic> type() => super.type().map((dynamic data) {
+    Parser<dynamic> type() => super.type().map(handleErrors((dynamic data) {
         if (data == null) { return null; }
         if (data is TypeRef) {
             return data;
@@ -58,13 +74,23 @@ class TSDParserDefinition extends TSDGrammarDefinition {
             }
             return data[1];
         }
-    });
+    }));
     @override
-    Parser<dynamic> typeSingle() => super.typeSingle();
+    Parser<dynamic> typeSingle() => super.typeSingle().map(handleErrors((dynamic data) {
+        if (data is TypeRef) {
+            return data;
+        } else if (data is List<dynamic>) {
+            if (data[0] is TypeRef && data[1] is ArrayBrackets) {
+                return data[0]..array += data[1].count;
+            }
+        } else {
+            print("SingleType invalid TypeRef: $data, ${data.runtimeType}");
+        }
+    }));
     @override
-    Parser<dynamic> typeNoLambda() => super.typeNoLambda().map(union);
+    Parser<dynamic> typeNoLambda() => super.typeNoLambda().map(handleErrors(union));
     @override
-    Parser<dynamic> typeNoLambdaSingle() => super.typeNoLambdaSingle().map((dynamic data) {
+    Parser<dynamic> typeNoLambdaSingle() => super.typeNoLambdaSingle().map(handleErrors((dynamic data) {
         final TypeRef ref = new TypeRef()..name=data[0].join(".");
         //print(data);
         if (data[1] != null) {
@@ -79,19 +105,36 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         }
         ref.array = data[2].count;
         return ref;
-    });
+    }));
     @override
-    Parser<dynamic> arrayBrackets() => super.arrayBrackets().map((dynamic data) => new ArrayBrackets());
+    Parser<dynamic> arrayBrackets() => super.arrayBrackets().map(handleErrors((dynamic data) => new ArrayBrackets()));
     @override
-    Parser<dynamic> arrayBracketsPlus() => super.arrayBracketsPlus().map((dynamic data) => new ArrayBrackets()..count = data.length);
+    Parser<dynamic> arrayBracketsPlus() => super.arrayBracketsPlus().map(handleErrors((dynamic data) => new ArrayBrackets()..count = data.length));
     @override
-    Parser<dynamic> arrayBracketsStar() => super.arrayBracketsStar().map((dynamic data) => new ArrayBrackets()..count = data.length);
+    Parser<dynamic> arrayBracketsStar() => super.arrayBracketsStar().map(handleErrors((dynamic data) => new ArrayBrackets()..count = data.length));
 
     @override
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
     
+    //@override
+    //Parser<dynamic> lambda() => super.lambda()
+
     @override
-    Parser<dynamic> lambda() => super.lambda().map((dynamic data) => new TypeRef()..type = StaticTypes.typeDynamic..notes.add(data.toString()) ); //TODO: give lambdas a proper output
+    Parser<dynamic> lambdaDef() => super.lambdaDef().map(handleErrors((dynamic data) => new LambdaRef()..notes.add(data.toString()) )); //TODO: give lambdas a proper output
+    @override
+    Parser<dynamic> lambdaArray() => super.lambdaArray().map(handleErrors((dynamic data) {
+        // 0 (
+        // 1 lambda
+        final TypeRef l = data[1];
+        // 2 )
+        // 3 brackets
+        if (data[3] != null && data[3] is ArrayBrackets) {
+            l.array = data[3].count;
+        }
+        return l;
+    }));
+    @override
+    Parser<dynamic> lambdaClosure() => super.lambdaClosure().map(handleErrors((dynamic data) => new LambdaRef()..notes.add("${data[1]} => ${data[3]}")));
 
     // function stuff
     @override
@@ -106,6 +149,8 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> interfaceDeclaration() => super.interfaceDeclaration().map(process(() => new InterfaceDef()));
     @override
     Parser<dynamic> enumDeclaration() => super.enumDeclaration().map(process(() => new Enum()));
+    @override
+    Parser<dynamic> constrainedObject() => super.constrainedObject().map(process(() => new ConstrainedObject()));
 
     /*@override
     Parser<dynamic> typeDeclaration() => super.typeDeclaration().map((dynamic data) {
@@ -130,4 +175,6 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> getter() => super.getter().map(process(() => new Getter()));
     @override
     Parser<dynamic> setter() => super.setter().map(process(() => new Setter()));
+    @override
+    Parser<dynamic> constant() => super.constant().map(process(() => new Variable()));
 }

@@ -1,9 +1,9 @@
 
 import "components.dart";
 
-abstract class TypeDeclaration extends Component {}
+abstract class TypeDeclaration extends TypeDef {}
 
-class TypeUnionDef extends TypeDef {
+class TypeUnionDef extends TypeDeclaration {
     Set<TypeRef> unionTypes = <TypeRef>{};
 
     @override
@@ -31,16 +31,20 @@ class TypeUnionDef extends TypeDef {
     }
 
     @override
-    String toString() => "${super.toString()}:{${unionTypes.join(" | ")}}";
+    Iterable<String> getPrintComponents() => this.unionTypes.map((TypeRef r) => r.toString());
 }
 
 class TypeThingy extends TypeDeclaration {
     @override
     void processList(List<dynamic> input) {
         // 0 docs
+        this.docs = input[0];
         // 1 export
         // 2 type
         // 3 type object
+        final TypeRef ref = input[3];
+        this.name = ref.name;
+        this.generics.addAll(ref.generics);
         // 4 =
         // 5 closure
         // 6 semicolon
@@ -51,9 +55,13 @@ class TypeModifier extends TypeDeclaration {
     @override
     void processList(List<dynamic> input) {
         // 0 docs
+        this.docs = input[0];
         // 1 export
         // 2 type
         // 3 type object
+        final TypeRef ref = input[3];
+        this.name = ref.name;
+        this.generics.addAll(ref.generics);
         // 4 =
         // 5 some clump of text
         // 6 semicolon

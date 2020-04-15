@@ -266,6 +266,12 @@ declare module BABYLON {
          * @return whether or not one observer registered with the given mask is handeled
         **/
         hasSpecificMask(mask?: number): boolean;
+
+        /**
+         * Gets or sets a function to be called when loading progress changes
+         */
+        get onprogress(): ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null;
+        set onprogress(value: ((this: XMLHttpRequest, ev: ProgressEvent) => any) | null);
     }
 }
 

@@ -1,6 +1,7 @@
 import "components.dart";
 
 class TypeRef extends Component {
+
     TypeDef type;
     final Set<GenericRef> generics = <GenericRef>{};
     int array = 0;
@@ -15,4 +16,10 @@ class TypeUnionRef extends TypeRef {
 
     @override
     String toString() => "( ${this.unionRefs.join(" | ")} )";
+}
+
+class LambdaRef extends TypeRef {
+    LambdaRef() {
+        this.type = StaticTypes.typeDynamic;
+    }
 }
