@@ -23,6 +23,48 @@ class TSDFile extends Component {
         }
     }
 
+    void getTypeDefs(Set<TypeDef> definitions) {
+        for (final Module m in modules.values) {
+            for (final Component c in m.components) {
+                if (c is TypeDef) {
+                    definitions.add(c);
+                }
+            }
+        }
+        for (final Component c in topLevelComponents) {
+            if (c is TypeDef) {
+                definitions.add(c);
+            }
+        }
+    }
+
+    void processEnums(Set<Enum> enums) {
+        for (final Module m in modules.values) {
+            for (final Component c in m.components) {
+                if (c is Enum) {
+                    enums.add(c);
+                }
+            }
+        }
+    }
+
+    @override
+    void processTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) { getTypeRefs(references, exclusions); }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) {
+        for (final Module ref in modules.values) {
+            ref.processTypeRefs(references, exclusions);
+        }
+        for (final Component ref in topLevelComponents) {
+            if (!exclusions.contains(ref.getName())) {
+                ref.processTypeRefs(references);
+            } else {
+                print("Excluding ${ref.runtimeType} ${ref.getName()} as it is a js class");
+            }
+        }
+    }
+
     @override
     String toString() => "TSDFile";
 }

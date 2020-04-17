@@ -1,7 +1,7 @@
 
 import "components.dart";
 
-class Member extends Component {
+abstract class Member extends Component {
     Accessor accessor;
     bool static;
     bool abstract;
@@ -41,12 +41,15 @@ class Field extends Member {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
+
+    @override
     String displayString() => "${super.displayString()}${type == null ? "" : ": $type"}";
 }
 
-class Method extends Member {
+class Method extends Member with HasGenerics {
     TypeRef type;
-    Set<GenericRef> generics = <GenericRef>{};
+    //Set<GenericRef> generics = <GenericRef>{};
     Set<Parameter> arguments = <Parameter>{};
 
     @override
@@ -96,6 +99,17 @@ class Method extends Member {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
+        for (final Parameter ref in arguments) {
+            ref.processTypeRefs(references);
+        }
+        this.type?.processTypeRefs(references);
+    }
+
+    @override
     String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
 }
 
@@ -128,6 +142,9 @@ class Getter extends Member {
         }
         // 8 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
 }
 
 class Setter extends Member {
@@ -152,6 +169,9 @@ class Setter extends Member {
         // 8 )
         // 9 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) { this.argument?.processTypeRefs(references); }
 }
 
 class Constructor extends Component {
@@ -177,6 +197,13 @@ class Constructor extends Component {
         }
         // 4 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final Parameter ref in arguments) {
+            ref.processTypeRefs(references);
+        }
+    }
 }
 
 class ArrayAccess extends Member {
@@ -195,4 +222,7 @@ class ArrayAccess extends Member {
         // 8 return type
         // 9 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {}
 }

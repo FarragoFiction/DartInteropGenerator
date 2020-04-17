@@ -1,8 +1,8 @@
 
 import "components.dart";
 
-class FunctionDeclaration extends Component {
-    final Set<GenericRef> generics = <GenericRef>{};
+class FunctionDeclaration extends Component with HasGenerics {
+    //final Set<GenericRef> generics = <GenericRef>{};
     final Set<Parameter> arguments = <Parameter>{};
     TypeRef type;
 
@@ -47,6 +47,17 @@ class FunctionDeclaration extends Component {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
+        for (final Parameter ref in arguments) {
+            ref.processTypeRefs(references);
+        }
+        this.type?.processTypeRefs(references);
+    }
+
+    @override
     String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
 }
 
@@ -74,6 +85,9 @@ class Parameter extends Component {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
+
+    @override
     String toString() => "$type $name";
 }
 
@@ -97,6 +111,15 @@ class GenericRef extends Component {
             this.extend = input[2][2];
         }
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        this.type?.processTypeRefs(references);
+        this.extend?.processTypeRefs(references);
+    }
+
+    @override
+    String getName() => this.type.getName();
 
     @override
     String toString() => "$type${this.extend != null ? " extends $extend" : ""}";

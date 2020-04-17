@@ -27,5 +27,19 @@ class Module extends Component {
     }
 
     @override
+    void processTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) { getTypeRefs(references, exclusions); }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) {
+        for (final Component c in components) {
+            if (!exclusions.contains(c.getName())) {
+                c.processTypeRefs(references);
+            } else {
+                print("Excluding ${c.runtimeType} ${c.getName()} as it is a js class");
+            }
+        }
+    }
+
+    @override
     String toString() => "${super.toString()}:$components";
 }

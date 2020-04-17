@@ -13,4 +13,7 @@ class Variable extends Component {
         // 4 value
         // 5 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {}
 }

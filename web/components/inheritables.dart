@@ -1,11 +1,11 @@
 import "components.dart";
 
-class TypeDef extends Component {
+class TypeDef extends Component with HasGenerics{
     final Set<TypeRef> inherits = <TypeRef>{};
     Iterable<TypeRef> extend;
     Iterable<TypeRef> implement;
 
-    final Set<GenericRef> generics = <GenericRef>{};
+    //final Set<GenericRef> generics = <GenericRef>{};
     final Set<Member> members = <Member>{};
     Iterable<Method> methods;
     Iterable<Field> fields;
@@ -18,6 +18,16 @@ class TypeDef extends Component {
     }
 
     Iterable<String> getPrintComponents() => members.map((Member m) => m.toString());
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final TypeRef ref in inherits) {
+            ref.processTypeRefs(references);
+        }
+        for (final Member ref in members) {
+            ref.processTypeRefs(references);
+        }
+    }
 
     @override
     String toString() => "${super.toString()}:{${getPrintComponents().join(", ")}}";
@@ -63,6 +73,12 @@ class ClassDef extends TypeDef {
             }
         }
         // 11 close brace
+    }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        super.getTypeRefs(references);
+        this.constructor?.processTypeRefs(references);
     }
 }
 

@@ -28,6 +28,9 @@ class Enum extends Component {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) {}
+
+    @override
     String toString() => "${super.toString()}:$values";
 }
 

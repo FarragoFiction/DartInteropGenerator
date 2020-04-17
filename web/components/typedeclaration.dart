@@ -31,6 +31,16 @@ class TypeUnionDef extends TypeDeclaration {
     }
 
     @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
+        for (final TypeRef ref in unionTypes) {
+            ref.processTypeRefs(references);
+        }
+    }
+
+    @override
     Iterable<String> getPrintComponents() => this.unionTypes.map((TypeRef r) => r.toString());
 }
 
@@ -49,6 +59,13 @@ class TypeThingy extends TypeDeclaration {
         // 5 closure
         // 6 semicolon
     }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
+    }
 }
 
 class TypeModifier extends TypeDeclaration {
@@ -65,5 +82,12 @@ class TypeModifier extends TypeDeclaration {
         // 4 =
         // 5 some clump of text
         // 6 semicolon
+    }
+
+    @override
+    void getTypeRefs(Set<TypeRef> references) {
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
     }
 }

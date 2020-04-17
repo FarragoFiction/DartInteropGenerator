@@ -1,17 +1,19 @@
+import "dart:convert";
 import "dart:io";
 
 import "package:args/args.dart";
 import "package:path/path.dart" as Path;
-import "package:petitparser/petitparser.dart";
 
-import "components/components.dart";
-import "grammar.dart";
-import "parser.dart";
+import "processor.dart";
 
 const String inputArg = "input";
+const String jsArg = "js";
 
 Future<void> main(List<String> arguments) async {
-    final ArgParser parser = new ArgParser()..addOption(inputArg, defaultsTo: "input.txt");
+    final ArgParser parser = new ArgParser()
+        ..addOption(inputArg, defaultsTo: "input.txt")
+        ..addOption(jsArg)
+    ;
 
     final ArgResults argResults = parser.parse(arguments);
 
@@ -21,22 +23,16 @@ Future<void> main(List<String> arguments) async {
     final File inputFile = new File(Path.join(Path.dirname(Platform.script.toFilePath()), argResults[inputArg]));
     final String data = (await inputFile.readAsString()).replaceAll(commentStripper, "").replaceAll(commentStripper2, "");
 
-    final GrammarParser processor = new TSDParser();
+    final Processor processor = new Processor();
 
-    final DateTime startTime = new DateTime.now();
-    print("Starting parse");
+    if (argResults[jsArg] != null) {
+        final File jsFile = new File(Path.join(Path.dirname(Platform.script.toFilePath()), argResults[jsArg]));
+        final List<dynamic> list = (jsonDecode(await jsFile.readAsString()))["js"];
+        final List<String> jsClasses = list.cast();
+        print("JS class list: $jsClasses");
+        processor.jsClasses.addAll(jsClasses);
+    }
 
-    final Result<dynamic> result = processor.parse(data);
-    print("Parsed in ${new DateTime.now().difference(startTime)}: ${result.isSuccess ? "success" : result}");
-    print(result);
-    print("Done in ${new DateTime.now().difference(startTime)}");
-
-    if (result.isFailure) { return; }
-
-    final TSDFile tsd = result.value;
-    print("modules: ${tsd.modules.length}, other components: ${tsd.topLevelComponents.length}");
-    print(tsd.modules.values.map((Module m) => m.name).toList());
-    print(tsd.modules);
-    print(tsd.topLevelComponents);
+    processor.process(data);
 }
 
