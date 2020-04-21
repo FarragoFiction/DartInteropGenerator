@@ -50,8 +50,9 @@ class Processor {
         print("Enums: ${enums.length}");
         print(enums.map((Enum t) => t.name).toList());
 
+        // start with the preset types
         final Map<String, TypeDef> typeMap = new Map<String,TypeDef>.from(presetTypes);
-        // add all the defined classes
+        // add all the defined classes, minus the already pruned JS ones
         typeMap.addAll(new Map<String,TypeDef>.fromIterable(typeDefs, key: (dynamic t) => t.getName()));
         // add all the enums as ints
         typeMap.addAll(new Map<String,TypeDef>.fromIterable(enums, key: (dynamic t) => t.getName(), value: (dynamic t) => StaticTypes.typeInt));

@@ -1,1 +1,6 @@
-BodyInit, WebGLBuffer, WebGLProgram, WebGLRenderingContext, WebGLShader, WebGLTransformFeedback, KeyboardEvent, HTMLCanvasElement, OffscreenCanvas, CanvasRenderingContext2D, Partial, Animation, Node, PointerEvent, MouseWheelEvent, Gamepad, GamepadButton, HTMLButtonElement, ImageBitmap, WebGLQuery, WebGLUniformLocation, WEBGL_compressed_texture_s3tc, EXT_texture_filter_anisotropic, HTMLVideoElement, MediaStream, MediaTrackConstraints, WebGLContextAttributes, WebGLFramebuffer, OffscreenCanvasRenderingContext2D, Window, WebGLVertexArrayObject, WebGLTexture, WebGLRenderbuffer, WebGL2RenderingContext, AudioNode, AudioContext, GainNode, ClientRect, PointerEventInit, RegExp, AudioBuffer, DeviceOrientationEvent, FocusEvent, XRWebGLLayer, XRSession, XRReferenceSpace, XRFrame, XRRenderState, ProgressEvent, XRInputSource, ClipboardEvent, Worker, MediaStreamTrack, XRInputSourceEvent, XRRigidTransform, EventTarget, FrameRequestCallback, DOMPointReadOnly, DOMPointInit, XRSpace, XRPose
+
+ 
+ 
+ --------
+ 
+BodyInit, WEBGL_compressed_texture_s3tc, EXT_texture_filter_anisotropic, WebGLContextAttributes, MediaTrackConstraints, PointerEventInit, DOMPointInit, FrameRequestCallback,

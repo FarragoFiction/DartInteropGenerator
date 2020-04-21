@@ -20,6 +20,8 @@ abstract class StaticTypes {
 
     //static final ClassDef typeByteBuffer = new ClassDef()..name="ByteBuffer";
 
+    static final TypeModifier typePartial = new TypeModifier()..name="Partial"..generics.add(new GenericRef()..name="T");
+
     static final Map<String, TypeDef> mapping = new Map<String,TypeDef>.fromIterable(rawMapping.entries, key: (dynamic entry) => entry.key, value: (dynamic item) {
         final MapEntry<String,dynamic> entry = item;
         if (entry.value is TypeDef) {
@@ -42,6 +44,8 @@ abstract class StaticTypes {
         "Promise": "Promise",
         "Error": "Error",
         "Event": "Event",
+        "Partial": typePartial,
+        "RegExp": "RegExp",
 
         "string": typeString,
         "String": typeString,
@@ -57,6 +61,7 @@ abstract class StaticTypes {
         "ArrayLike": typeList,
         "ReadonlyArray": typeList,
         "Set": "Set",
+        "ClientRect": "Rectangle<num>",
 
         // dart:typed_data
         "Float32Array": "Float32List",
@@ -72,19 +77,75 @@ abstract class StaticTypes {
         "ArrayBuffer": "ByteBuffer",
         "ArrayBufferView": typeDynamic, // no general version in dart as far as I can tell
 
-        // dart:html
+        // dart:html as HTML
         "HTMLElement": "HTML.Element",
         "HTMLImageElement": "HTML.ImageElement",
         "Document": "HTML.Document",
         "Blob": "HTML.Blob",
         "File": "HTML.File",
         "ImageData": "HTML.ImageData",
+        "HTMLCanvasElement": "HTML.CanvasElement",
+        "CanvasRenderingContext2D": "HTML.CanvasRenderingContext2D",
+        "OffscreenCanvas": "HTML.OffscreenCanvas",
+        "OffscreenCanvasRenderingContext2D": "HTML.OffscreenCanvasRenderingContext2D",
+        "HTMLButtonElement": "HTML.ButtonElement",
+        "HTMLVideoElement": "HTML.VideoElement",
+        "KeyboardEvent": "HTML.KeyboardEvent",
+        "Animation": "HTML.Animation",
+        "Node": "HTML.Node",
+        "PointerEvent": "HTML.PointerEvent",
+        "MouseWheelEvent": "HTML.MouseWheelEvent",
+        "Gamepad": "HTML.Gamepad",
+        "GamepadButton": "HTML.GamepadButton",
+        "ImageBitmap": "HTML.ImageBitmap",
+        "MediaStream": "HTML.MediaStream",
+        "Window": "HTML.Window",
+        "DeviceOrientationEvent": "HTML.DeviceOrientationEvent",
+        "FocusEvent": "HTML.FocusEvent",
+        "ProgressEvent": "HTML.ProgressEvent",
+        "ClipboardEvent": "HTML.ClipboardEvent",
+        "Worker": "HTML.Worker",
+        "MediaStreamTrack": "HTML.MediaStreamTrack",
+        "EventTarget": "HTML.EventTarget",
+        "DOMPointReadOnly": "HTML.DomPointReadOnly",
+
+        // dart:web_gl as WebGL
+        "WebGLBuffer": "WebGL.Buffer",
+        "WebGLProgram": "WebGL.Program",
+        "WebGLRenderingContext": "WebGL.RenderingContext",
+        "WebGL2RenderingContext": "WebGL.RenderingContext2",
+        "WebGLShader": "WebGL.Shader",
+        "WebGLTransformFeedback": "WebGL.TransformFeedback",
+        "WebGLQuery": "WebGL.Query",
+        "WebGLUniformLocation": "WebGL.UniformLocation",
+        "WebGLFramebuffer": "WebGL.Framebuffer",
+        "WebGLVertexArrayObject": "WebGL.VertexArrayObject",
+        "WebGLTexture": "WebGL.Texture",
+        "WebGLRenderbuffer": "WebGL.Renderbuffer",
+
+        // dart:web_audio as Audio
+        "AudioNode": "Audio.AudioNode",
+        "AudioContext": "Audio.AudioContext",
+        "GainNode": "Audio.GainNode",
+        "AudioBuffer": "Audio.AudioBuffer",
 
         // other
         "XMLHttpRequestResponseType": typeString,
         "XMLHttpRequestEventMap": typeDynamic,
         "AddEventListenerOptions": typeDynamic,
         "EventListenerOptions": typeDynamic,
+
+        // webXR stuff which dart's API doesn't cover right now
+        "XRWebGLLayer": typeDynamic,
+        "XRSession": typeDynamic,
+        "XRReferenceSpace": typeDynamic,
+        "XRFrame": typeDynamic,
+        "XRRenderState": typeDynamic,
+        "XRInputSource": typeDynamic,
+        "XRInputSourceEvent": typeDynamic,
+        "XRRigidTransform": typeDynamic,
+        "XRSpace": typeDynamic,
+        "XRPose": typeDynamic,
     };
 }
 
