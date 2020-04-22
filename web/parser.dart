@@ -47,8 +47,8 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     // reduction of text
     @override
     Parser<dynamic> DOC_COMMENT() => super.DOC_COMMENT().map((dynamic data) => new List<String>.from(data[1]));
-    @override
-    Parser<dynamic> identifier() => super.identifier().map((dynamic data) => data.value);
+    //@override
+    //Parser<dynamic> identifier() => super.identifier().map((dynamic data) => data.value);
 
     // types
     @override
@@ -94,6 +94,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> typeNoLambda() => super.typeNoLambda().map(handleErrors(union));
     @override
     Parser<dynamic> typeNoLambdaSingle() => super.typeNoLambdaSingle().map(handleErrors((dynamic data) {
+        //print(data[0]);
         final TypeRef ref = new TypeRef()..name=data[0].join(".");
         //print(data);
         if (data[1] != null) {

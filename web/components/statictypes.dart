@@ -164,8 +164,9 @@ class Accessor {
     const Accessor._(String this.name);
 
     static Accessor process(dynamic item) {
-        if (item != null && byName.containsKey(item.value)) {
-            return byName[item.value];
+        item = (item == null || item is String) ? item : item.value;
+        if (item != null && byName.containsKey(item)) {
+            return byName[item];
         }
         return Accessor.public;
     }

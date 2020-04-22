@@ -59,9 +59,9 @@ class TSDFile extends Component {
         for (final Component ref in topLevelComponents) {
             if (!exclusions.contains(ref.getName())) {
                 ref.processTypeRefs(references);
-            } else {
+            } /*else {
                 print("Excluding ${ref.runtimeType} ${ref.getName()} as it is a js class");
-            }
+            }*/
         }
     }
 

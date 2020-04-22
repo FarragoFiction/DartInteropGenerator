@@ -352,7 +352,8 @@ class TSDGrammarDefinition extends GrammarDefinition {
 
     Parser<dynamic> token(Object input) {
         if (input is Parser) {
-            return input.token().trim(ref(WHITESPACE));
+            //return input.token().trim(ref(WHITESPACE));
+            return input.trim(ref(WHITESPACE));
         } else if (input is String) {
             return token(input.length == 1 ? char(input) : string(input));
         } else if (input is Function) {

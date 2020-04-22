@@ -34,9 +34,9 @@ class Module extends Component {
         for (final Component c in components) {
             if (!exclusions.contains(c.getName())) {
                 c.processTypeRefs(references);
-            } else {
+            }/* else {
                 print("Excluding ${c.runtimeType} ${c.getName()} as it is a js class");
-            }
+            }*/
         }
     }
 

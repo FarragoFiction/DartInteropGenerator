@@ -2,6 +2,7 @@ import "package:petitparser/petitparser.dart";
 
 import "components/components.dart";
 import "parser.dart";
+import "grammar.dart";
 
 class Processor {
     final Map<String, TypeDef> presetTypes = <String, TypeDef>{};
@@ -19,16 +20,18 @@ class Processor {
 
         final Result<dynamic> result = processor.parse(input);
         print("Parsed in ${new DateTime.now().difference(startTime)}: ${result.isSuccess ? "success" : result}");
-        print(result);
-        print("Done in ${new DateTime.now().difference(startTime)}");
+        //print(result);
+        //print("Done in ${new DateTime.now().difference(startTime)}");
 
         if (result.isFailure) { return; }
+
+        //return;
 
         final TSDFile tsd = result.value;
         print("modules: ${tsd.modules.length}, other components: ${tsd.topLevelComponents.length}");
         print(tsd.modules.values.map((Module m) => m.name).toList());
-        print(tsd.modules);
-        print(tsd.topLevelComponents);
+        //print(tsd.modules);
+        //print(tsd.topLevelComponents);
 
         final Set<TypeDef> typeDefs = <TypeDef>{};
         tsd.getTypeDefs(typeDefs);
