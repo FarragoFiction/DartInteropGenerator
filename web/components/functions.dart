@@ -123,4 +123,9 @@ class GenericRef extends Component {
 
     @override
     String toString() => "$type${this.extend != null ? " extends $extend" : ""}";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        this.type.writeOutput(writer);
+    }
 }

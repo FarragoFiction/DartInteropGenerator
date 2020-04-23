@@ -29,24 +29,33 @@ abstract class Component {
 
     String getName() => name;
 
+    void writeOutput(OutputWriter writer) {}
+
     @override
     String toString() => "(${displayString()})";
 
     String displayName() => (this.name == null || this.name.isEmpty) ? "unnamed" : this.name;
     String displayString() => "${this.runtimeType} ${displayName()}";
+
+    static String makeNameSafe(String name) {
+        return name;
+    }
+
+    void merge(Component otherComponent) {
+        // don't handle this by default
+    }
 }
 
 mixin HasGenerics on Component {
     final Set<GenericRef> generics = <GenericRef>{};
 
-    @override
-    void processTypeRefs(Set<TypeRef> references) {
+    void processTypeRefsForGenerics(Set<TypeRef> references) {
         final Set<TypeRef> intermediary = <TypeRef>{};
         this.getTypeRefs(intermediary);
 
         //print("Refs in ${this.name} -------------- $intermediary");
 
-        references.addAll(intermediary.where((TypeRef ref) {
+        /*references.addAll(intermediary.where((TypeRef ref) {
             //print("${ref.runtimeType} ${ref.name} ---");
             if (ref.type != null || ref.name == null ) { return true; }
             for (final GenericRef generic in generics) {
@@ -58,6 +67,61 @@ mixin HasGenerics on Component {
                 }
             }
             return true;
-        }));
+        }));*/
+
+        for (final TypeRef ref in intermediary) {
+            //print("${ref.runtimeType} ${ref.name} ---");
+            if (ref.type != null || ref.name == null ) {
+                references.add(ref);
+                continue;
+            }
+            for (final GenericRef generic in generics) {
+                //print("vs ${generic.runtimeType} ${generic.type.name} $generic");
+                if (ref.name == generic.getName()) {
+                    //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
+                    ref.genericOf = this;
+                    continue;
+                }
+            }
+            references.add(ref);
+        }
     }
+}
+
+class OutputWriter {
+    final StringBuffer buffer = new StringBuffer();
+    int indent = 0;
+
+    void writeLine([String string = ""]) => buffer.writeln("${"\t" * indent}$string");
+    void write(String string) => buffer.write(string);
+    void writeIndented(String string) => buffer.write("${"\t" * indent}$string");
+    void writeDocs(List<String> docs, List<String> comments) {
+        final int docsLength = docs == null ? 0 : docs.length;
+        final int commentsLength = comments == null ? 0 : comments.length;
+        if (docsLength == 0 && commentsLength == 0) { return; }
+
+        if (docsLength > 0) {
+            for (final String line in docs) {
+                writeIndented("/// ");
+                write(line);
+                write("\n");
+            }
+        }
+
+        if(docsLength > 0 && commentsLength > 0) {
+            writeLine("/// ");
+        }
+
+        if (commentsLength > 0) {
+            writeLine("/// Conversion notes:");
+            for (final String line in comments) {
+                writeIndented("/// ");
+                write(line);
+                write("\n");
+            }
+        }
+    }
+
+    @override
+    String toString() => buffer.toString();
 }

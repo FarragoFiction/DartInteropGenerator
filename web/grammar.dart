@@ -5,6 +5,7 @@ class TSDGrammar extends GrammarParser {
 }
 
 class TSDGrammarDefinition extends GrammarDefinition {
+    static const bool useTokens = false;
     const TSDGrammarDefinition();
 
     Parser<dynamic> DEFINE() => ref(token, "define");
@@ -352,8 +353,11 @@ class TSDGrammarDefinition extends GrammarDefinition {
 
     Parser<dynamic> token(Object input) {
         if (input is Parser) {
-            //return input.token().trim(ref(WHITESPACE));
-            return input.trim(ref(WHITESPACE));
+            if (useTokens) {
+                return input.token().trim(ref(WHITESPACE));
+            } else {
+                return input.trim(ref(WHITESPACE));
+            }
         } else if (input is String) {
             return token(input.length == 1 ? char(input) : string(input));
         } else if (input is Function) {

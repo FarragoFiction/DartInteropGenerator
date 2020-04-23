@@ -1,24 +1,14 @@
 import "components.dart";
 
 abstract class StaticTypes {
-    //static final ClassDef typeVoid = new ClassDef()..name="void";
     static final ClassDef typeDynamic = new ClassDef()..name="dynamic";
+    static final ClassDef typeVoid = new ClassDef()..name="void";
 
     static final ClassDef typeString = new ClassDef()..name="String";
-    //static final ClassDef typeNum = new ClassDef()..name="num";
     static final ClassDef typeInt = new ClassDef()..name="int";
-    //static final ClassDef typeDouble = new ClassDef()..name="double";
-    //static final ClassDef typeBool = new ClassDef()..name="bool";
-    //static final ClassDef typeFunction = new ClassDef()..name="Function";
 
     static final ClassDef typeList = new ClassDef()..name="List";
-    //static final ClassDef typeSet = new ClassDef()..name="Set";
-    //static final ClassDef typeFloat32List = new ClassDef()..name="Float32List";
-    //static final ClassDef typeInt32List = new ClassDef()..name="Int32List";
-    //static final ClassDef typeUint32List = new ClassDef()..name="Uint32List";
-    //static final ClassDef typeUint16List = new ClassDef()..name="Uint16List";
-
-    //static final ClassDef typeByteBuffer = new ClassDef()..name="ByteBuffer";
+    static final ClassDef typeJsArray = new ClassDef()..name="JsArray";
 
     static final TypeModifier typePartial = new TypeModifier()..name="Partial"..generics.add(new GenericRef()..name="T");
 
@@ -33,8 +23,8 @@ abstract class StaticTypes {
         }
     });
     static final Map<String, dynamic> rawMapping = <String, dynamic> {
-        "void": "void",
-        "null": "void",
+        "void": typeVoid,
+        "null": typeVoid,
         "any": typeDynamic,
         "this": typeDynamic, // weird
         "unknown": typeDynamic,
@@ -57,10 +47,10 @@ abstract class StaticTypes {
         "boolean": "bool",
         "Boolean": "bool",
 
-        "Array": typeList,
-        "ArrayLike": typeList,
-        "ReadonlyArray": typeList,
-        "Set": "Set",
+        "Array": typeJsArray,
+        "ArrayLike": typeJsArray,
+        "ReadonlyArray": typeJsArray,
+        "Set": typeJsArray,
         "ClientRect": "Rectangle<num>",
 
         // dart:typed_data

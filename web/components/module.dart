@@ -2,7 +2,7 @@
 import "components.dart";
 
 class Module extends Component {
-    final List<Component> components = <Component>[];
+    final Map<String, Component> components = <String, Component>{};
 
     @override
     void processList(List<dynamic> input) {
@@ -19,7 +19,7 @@ class Module extends Component {
         final List<dynamic> content = input[4][1]; // between braces
         for (final dynamic object in content) {
             if (object is Component) {
-                components.add(object);
+                components[object.name] = object;
             } else {
                 print("Module non-component: $object");
             }
@@ -31,7 +31,7 @@ class Module extends Component {
 
     @override
     void getTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) {
-        for (final Component c in components) {
+        for (final Component c in components.values) {
             if (!exclusions.contains(c.getName())) {
                 c.processTypeRefs(references);
             }/* else {
@@ -42,4 +42,64 @@ class Module extends Component {
 
     @override
     String toString() => "${super.toString()}:$components";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine('@JS("$name")')
+            ..writeLine('library $name;')
+            ..writeLine()
+            ..writeLine('import "dart:html" as HTML;')
+            ..writeLine('import "dart:js";')
+            ..writeLine('import "dart:typed_data";')
+            ..writeLine('import "dart:web_gl" as WebGL;')
+            ..writeLine()
+            ..writeLine('import "package:js/js.dart";');
+
+        for (final Component component in components.values) {
+            if (component == null) { continue; }
+            if (component.name.startsWith("_")) { continue; }
+            component.writeOutput(writer);
+        }
+    }
+
+    @override
+    void merge(Component otherComponent) {
+        if (!(otherComponent is Module)) { throw Exception("Only merge modules with modules dunkass"); }
+        final Module other = otherComponent;
+
+        for (final String compName in other.components.keys) {
+            if (this.components.containsKey(compName)) {
+                // handle conflicts
+                final Component thisComp = this.components[compName];
+                final Component thatComp = other.components[compName];
+
+                if (thatComp is ClassDef) {
+                    if (thisComp is InterfaceDef) {
+                        // if we have an interface and the other one has a class, overwrite
+                        this.components[compName] = thatComp;
+                        //print("class replaces interface $compName");
+                    } else if (thisComp is ClassDef) {
+                        // conflicting classes
+                        //print("class conflict: $compName");
+                        thisComp.merge(thatComp);
+                    }
+                } else if (thatComp is InterfaceDef) {
+                    if (thisComp is ClassDef) {
+                        // no-op, we take precedence already
+                        //print("interface ignored with class: $compName");
+                    } else if (thisComp is InterfaceDef) {
+                        // interface merger
+                        //print("interface conflict: $compName");
+                        thisComp.merge(thatComp);
+                    }
+                } else {
+                    print("Module merge conflict: $compName");
+                }
+            } else {
+                // no conflict, merge directly
+                this.components[compName] = other.components[compName];
+            }
+        }
+    }
 }

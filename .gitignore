@@ -17,3 +17,6 @@ doc/api/
 # Don't push bundles or manifest files
 *.bundle
 web/manifest/manifest.txt
+
+# ignore our output folder
+web/outputs/

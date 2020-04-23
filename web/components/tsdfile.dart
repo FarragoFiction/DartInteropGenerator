@@ -13,7 +13,8 @@ class TSDFile extends Component {
                     modules[item.name] = item;
                 } else {
                     final Module module = modules[item.name];
-                    module.components.addAll(item.components);
+                    //module.components.addAll(item.components);
+                    module.merge(item);
                 }
             } else if (item is Component) {
                 this.topLevelComponents.add(item);
@@ -25,7 +26,7 @@ class TSDFile extends Component {
 
     void getTypeDefs(Set<TypeDef> definitions) {
         for (final Module m in modules.values) {
-            for (final Component c in m.components) {
+            for (final Component c in m.components.values) {
                 if (c is TypeDef) {
                     definitions.add(c);
                 }
@@ -40,7 +41,7 @@ class TSDFile extends Component {
 
     void processEnums(Set<Enum> enums) {
         for (final Module m in modules.values) {
-            for (final Component c in m.components) {
+            for (final Component c in m.components.values) {
                 if (c is Enum) {
                     enums.add(c);
                 }
@@ -64,6 +65,9 @@ class TSDFile extends Component {
             }*/
         }
     }
+
+    @override
+    void writeOutput(OutputWriter writer) { }
 
     @override
     String toString() => "TSDFile";

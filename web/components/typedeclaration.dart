@@ -1,7 +1,12 @@
 
 import "components.dart";
 
-abstract class TypeDeclaration extends TypeDef {}
+abstract class TypeDeclaration extends TypeDef {
+    @override
+    void writeOutput(OutputWriter writer) {}
+    @override
+    void writeReference(OutputWriter writer, Set<GenericRef> generics) => writer.write("dynamic");
+}
 
 class TypeUnionDef extends TypeDeclaration {
     Set<TypeRef> unionTypes = <TypeRef>{};
@@ -42,6 +47,17 @@ class TypeUnionDef extends TypeDeclaration {
 
     @override
     Iterable<String> getPrintComponents() => this.unionTypes.map((TypeRef r) => r.toString());
+
+    @override
+    void writeReference(OutputWriter writer, Set<GenericRef> generics) {
+        final Set<TypeRef> filtered = unionTypes.where((TypeRef ref) => ref.type != StaticTypes.typeVoid).toSet();
+        if (filtered.length == 1 && !generics.isEmpty) {
+            print("union type generic input: $generics");
+            generics.first.writeOutput(writer);
+        } else {
+            writer.write("dynamic");
+        }
+    }
 }
 
 class TypeThingy extends TypeDeclaration {
@@ -90,4 +106,7 @@ class TypeModifier extends TypeDeclaration {
             ref.processTypeRefs(references);
         }
     }
+
+    @override
+    void writeReference(OutputWriter writer, Set<GenericRef> generics) => generics.first.writeOutput(writer);
 }

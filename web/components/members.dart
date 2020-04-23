@@ -7,6 +7,14 @@ abstract class Member extends Component {
     bool abstract;
 
     bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_");
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes)
+            ..writeLine("// $name: ${this.runtimeType}");
+    }
 }
 
 class Field extends Member {
@@ -45,6 +53,25 @@ class Field extends Member {
 
     @override
     String displayString() => "${super.displayString()}${type == null ? "" : ": $type"}";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes)
+            ..writeIndented("external ");
+        this.type.writeOutput(writer);
+        writer
+            ..write(" get ")
+            ..write(name)
+            ..write(";\n")
+            ..writeIndented("external set ")
+            ..write(name)
+            ..write("(")
+        ;
+        this.type.writeOutput(writer);
+        writer.write(" value);\n");
+    }
 }
 
 class Method extends Member with HasGenerics {
@@ -203,6 +230,14 @@ class Constructor extends Component {
         for (final Parameter ref in arguments) {
             ref.processTypeRefs(references);
         }
+    }
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes)
+            ..writeLine("// Constructor");
     }
 }
 

@@ -2,7 +2,6 @@ import "package:petitparser/petitparser.dart";
 
 import "components/components.dart";
 import "parser.dart";
-import "grammar.dart";
 
 class Processor {
     final Map<String, TypeDef> presetTypes = <String, TypeDef>{};
@@ -12,7 +11,7 @@ class Processor {
         presetTypes.addAll(StaticTypes.mapping);
     }
 
-    void process(String input) {
+    Map<String,String> process(String input) {
         final GrammarParser processor = new TSDParser();
 
         final DateTime startTime = new DateTime.now();
@@ -23,7 +22,7 @@ class Processor {
         //print(result);
         //print("Done in ${new DateTime.now().difference(startTime)}");
 
-        if (result.isFailure) { return; }
+        if (result.isFailure) { throw Exception("Parse failed"); }
 
         //return;
 
@@ -75,5 +74,17 @@ class Processor {
 
         print("Unresolved types: ${unresolved.length}");
         print(unresolved);
+
+        final Map<String, String> outputs = <String,String>{};
+
+        for (final Module module in tsd.modules.values) {
+            final OutputWriter writer = new OutputWriter();
+            module.writeOutput(writer);
+            outputs[module.name] = writer.toString();
+        }
+
+        return outputs;
     }
 }
+
+

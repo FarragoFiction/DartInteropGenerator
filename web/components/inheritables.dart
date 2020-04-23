@@ -30,9 +30,94 @@ class TypeDef extends Component with HasGenerics{
     }
 
     @override
+    void merge(Component otherComponent) {
+        if (!(otherComponent is TypeDef)) { throw Exception("only merge typedefs with other typedefs dunkass"); }
+        final TypeDef other = otherComponent;
+
+        final Map<String,Member> mapped = new Map<String,Member>.fromIterable(this.members, key: (dynamic m) => m.name);
+        for (final Member member in other.members) {
+            if (!mapped.containsKey(member.name)) {
+                this.members.add(member);
+            }
+        }
+    }
+
+    @override
     String toString() => "${super.toString()}:{${getPrintComponents().join(", ")}}";
     @override
     String displayName() => "${super.displayName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}";
+
+    void writeReference(OutputWriter writer, Set<GenericRef> gen) {
+        writer.write(Component.makeNameSafe(name));
+        if (!gen.isEmpty) {
+            writer.write("<");
+            for (final GenericRef ref in gen) {
+                ref.writeOutput(writer);
+                if (gen.last != ref) {
+                    writer.write(",");
+                }
+            }
+            writer.write(">");
+        }
+    }
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        final String safeName = Component.makeNameSafe(name);
+        
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes)
+            ..writeIndented('@JS(');
+        if (name != safeName) {
+            writer
+                ..write('"')
+                ..write(name)
+                ..write('"');
+        }
+        writer
+            ..write(')\n')
+            ..writeIndented(writeType())
+            ..write(" ");
+        writeReference(writer, generics);
+        writer.write(" ");
+
+        if (!extend.isEmpty) {
+            writer.write("extends ");
+            extend.first.writeOutput(writer);
+            writer.write(" ");
+        }
+
+        if (!implement.isEmpty) {
+            writer.write("implements ");
+            for (final TypeRef ref in implement) {
+                ref.writeOutput(writer);
+                if (implement.last != ref) {
+                    writer.write(", ");
+                }
+            }
+            writer.write(" ");
+        }
+
+        writer
+            ..write("{\n")
+            ..indent += 1;
+
+        writeContents(writer);
+
+        writer..indent-=1..writeLine("}");
+    }
+
+    String writeType() => "type";
+    void writeContents(OutputWriter writer) {
+        for (final Member member in members) {
+            if (member.accessor == Accessor.private || member.name.startsWith("_")) { continue; }
+            member.writeOutput(writer);
+        }
+    }
+
+    @override
+    void processTypeRefs(Set<TypeRef> references) => this.processTypeRefsForGenerics(references);
 }
 
 class ClassDef extends TypeDef {
@@ -49,6 +134,9 @@ class ClassDef extends TypeDef {
         // 4 name and generics
         this.name = input[4].name;
         this.generics.addAll(input[4].generics);
+        for (final GenericRef ref in generics) {
+            ref.type.genericOf = this;
+        }
         // 5 extends
         if (input[5] != null) {
             this.inherits.add(input[5][1]);
@@ -80,6 +168,24 @@ class ClassDef extends TypeDef {
         super.getTypeRefs(references);
         this.constructor?.processTypeRefs(references);
     }
+
+    @override
+    void merge(Component otherComponent) {
+        super.merge(otherComponent);
+        final ClassDef c = otherComponent;
+        if (this.constructor == null && c.constructor != null) {
+            this.constructor = c.constructor;
+        }
+    }
+
+    @override
+    void writeContents(OutputWriter writer) {
+        this.constructor?.writeOutput(writer);
+        super.writeContents(writer);
+    }
+
+    @override
+    String writeType() => "class";
 }
 
 class InterfaceDef extends TypeDef {
@@ -93,6 +199,9 @@ class InterfaceDef extends TypeDef {
         // 3 name and generics
         this.name = input[3].name;
         this.generics.addAll(input[3].generics);
+        for (final GenericRef ref in generics) {
+            ref.type.genericOf = this;
+        }
         // 4 extends
         if (input[4] != null) {
             this.inherits.add(input[4][1]);
@@ -109,5 +218,15 @@ class InterfaceDef extends TypeDef {
             }
         }
         // 7 close brace
+    }
+
+    @override
+    String writeType() => "abstract class";
+
+    @override
+    void writeContents(OutputWriter writer) {
+        for (final Member member in members) {
+            member.writeOutput(writer);
+        }
     }
 }

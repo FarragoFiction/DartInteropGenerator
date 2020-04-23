@@ -21,6 +21,17 @@ class TypeRef extends Component {//} with HasGenerics {
 
     @override
     String toString() => "(${this.getName() == null ? "unnamed" : this.getName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"})";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        if (type != null) {
+            type.writeReference(writer, generics);
+        } else if (genericOf != null) {
+            writer.write(name);
+        } else {
+            writer.write("[unresolved type $name]");
+        }
+    }
 }
 
 class TypeUnionRef extends TypeRef {
@@ -36,6 +47,15 @@ class TypeUnionRef extends TypeRef {
 
     @override
     String toString() => "( ${this.unionRefs.join(" | ")} )";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        if (unionRefs.length == 1) {
+            unionRefs.first.writeOutput(writer);
+        } else {
+            writer.write("dynamic");
+        }
+    }
 }
 
 class LambdaRef extends TypeRef {
