@@ -39,6 +39,15 @@ class TSDFile extends Component {
         }
     }
 
+    @override
+    void checkTypeNames(Set<String> types) {
+        for (final Module m in modules.values) {
+            for (final Component c in m.components.values) {
+                c.checkTypeNames(types);
+            }
+        }
+    }
+
     void processEnums(Set<Enum> enums) {
         for (final Module m in modules.values) {
             for (final Component c in m.components.values) {

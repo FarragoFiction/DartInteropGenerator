@@ -33,7 +33,7 @@ abstract class StaticTypes {
         "Function": "Function",
         "Promise": "Promise",
         "Error": "Error",
-        "Event": "Event",
+        "Event": "HTML.Event",
         "Partial": typePartial,
         "RegExp": "RegExp",
 
@@ -51,7 +51,7 @@ abstract class StaticTypes {
         "ArrayLike": typeJsArray,
         "ReadonlyArray": typeJsArray,
         "Set": typeJsArray,
-        "ClientRect": "Rectangle<num>",
+        "ClientRect": "Math.Rectangle<num>",
 
         // dart:typed_data
         "Float32Array": "Float32List",

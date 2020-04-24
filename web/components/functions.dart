@@ -89,6 +89,14 @@ class Parameter extends Component {
 
     @override
     String toString() => "$type $name";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        this.type.writeOutput(writer);
+        writer
+            ..write(" ")
+            ..write(this.getName());
+    }
 }
 
 class GenericRef extends Component {

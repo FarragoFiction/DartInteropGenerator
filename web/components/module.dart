@@ -51,14 +51,16 @@ class Module extends Component {
             ..writeLine()
             ..writeLine('import "dart:html" as HTML;')
             ..writeLine('import "dart:js";')
+            ..writeLine('import "dart:math" as Math;')
             ..writeLine('import "dart:typed_data";')
+            ..writeLine('import "dart:web_audio" as Audio;')
             ..writeLine('import "dart:web_gl" as WebGL;')
             ..writeLine()
             ..writeLine('import "package:js/js.dart";');
 
         for (final Component component in components.values) {
             if (component == null) { continue; }
-            if (component.name.startsWith("_")) { continue; }
+            if (component.getName().startsWith("_")) { continue; }
             component.writeOutput(writer);
         }
     }

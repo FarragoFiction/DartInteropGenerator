@@ -43,6 +43,13 @@ class TypeDef extends Component with HasGenerics{
     }
 
     @override
+    void checkTypeNames(Set<String> types) {
+        for (final Member member in members) {
+            member.checkTypeNames(types);
+        }
+    }
+
+    @override
     String toString() => "${super.toString()}:{${getPrintComponents().join(", ")}}";
     @override
     String displayName() => "${super.displayName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}";
@@ -111,7 +118,7 @@ class TypeDef extends Component with HasGenerics{
     String writeType() => "type";
     void writeContents(OutputWriter writer) {
         for (final Member member in members) {
-            if (member.accessor == Accessor.private || member.name.startsWith("_")) { continue; }
+            if (member.accessor == Accessor.private || member.getName().startsWith("_")) { continue; }
             member.writeOutput(writer);
         }
     }

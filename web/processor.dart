@@ -66,7 +66,8 @@ class Processor {
                 final String name = ref.getName();
                 if (typeMap.containsKey(name)) {
                     ref.type = typeMap[name];
-                } else {
+                } else if (ref.genericOf == null) {
+                    // if it's not a generic, stick it in the unresolved list
                     unresolved.add(name);
                 }
             }
@@ -74,6 +75,10 @@ class Processor {
 
         print("Unresolved types: ${unresolved.length}");
         print(unresolved);
+
+        // do a pass to correct member names for types
+        final Set<String> typeNames = typeDefs.map((TypeDef def) => def.getName()).toSet();
+        tsd.checkTypeNames(typeNames);
 
         final Map<String, String> outputs = <String,String>{};
 

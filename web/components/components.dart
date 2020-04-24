@@ -14,6 +14,7 @@ export "variable.dart";
 
 abstract class Component {
     String name;
+    String altName;
     List<String> docs;
     final List<String> notes = <String>[];
 
@@ -27,7 +28,15 @@ abstract class Component {
     void getTypeRefs(Set<TypeRef> references);
     void processTypeRefs(Set<TypeRef> references) { getTypeRefs(references); }
 
+    void checkTypeNames(Set<String> types){
+        final String baseName = getName();
+        if (types.contains(baseName)) {
+            altName = "${baseName}_js";
+        }
+    }
+
     String getName() => name;
+    String getJsName() => this.altName != null ? this.altName : this.getName();
 
     void writeOutput(OutputWriter writer) {}
 

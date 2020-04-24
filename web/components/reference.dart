@@ -24,13 +24,17 @@ class TypeRef extends Component {//} with HasGenerics {
 
     @override
     void writeOutput(OutputWriter writer) {
+        writer.write("JsArray<" * array);
         if (type != null) {
             type.writeReference(writer, generics);
         } else if (genericOf != null) {
             writer.write(name);
         } else {
-            writer.write("[unresolved type $name]");
+            //writer.write("[unresolved type $name]");
+            print("Unresolved type $name");
+            writer.write("dynamic /* unresolved: $name */");
         }
+        writer.write(">" * array);
     }
 }
 

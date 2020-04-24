@@ -14,6 +14,7 @@ abstract class Member extends Component {
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
             ..writeLine("// $name: ${this.runtimeType}");
+        print("Member missing output: $runtimeType ${getName()}");
     }
 }
 
@@ -58,18 +59,34 @@ class Field extends Member {
     void writeOutput(OutputWriter writer) {
         writer
             ..writeLine()
-            ..writeDocs(this.docs, this.notes)
-            ..writeIndented("external ");
-        this.type.writeOutput(writer);
+            ..writeDocs(this.docs, this.notes);
+        writeGetter(this, type, writer);
+        writeSetter(this, type, writer);
+    }
+
+    static void writeGetter(Member member, TypeRef type, OutputWriter writer) {
+        if (member.altName != null) {
+            writer.writeLine('@JS("${member.getName()}")');
+        }
+        writer.writeIndented("external ");
+        type.writeOutput(writer);
         writer
             ..write(" get ")
-            ..write(name)
+            ..write(member.getJsName())
             ..write(";\n")
+        ;
+    }
+
+    static void writeSetter(Member member, TypeRef type, OutputWriter writer) {
+        if (member.altName != null) {
+            writer.writeLine('@JS("${member.getName()}")');
+        }
+        writer
             ..writeIndented("external set ")
-            ..write(name)
+            ..write(member.getJsName())
             ..write("(")
         ;
-        this.type.writeOutput(writer);
+        type.writeOutput(writer);
         writer.write(" value);\n");
     }
 }
@@ -123,6 +140,20 @@ class Method extends Member with HasGenerics {
             print("Method non-type returned: ${input[10]} in $input");
         }
         // 11 semicolon
+
+        // make sure generic typed arguments are marked as such
+        for (final GenericRef ref in generics) {
+            ref.type.genericOf = this;
+            for (final Parameter arg in arguments) {
+                if (arg.type.getName() == ref.getName()) {
+                    arg.type.genericOf = this;
+                    break;
+                }
+            }
+            if (type.getName() == ref.getName()) {
+                type.genericOf = this;
+            }
+        }
     }
 
     @override
@@ -138,6 +169,43 @@ class Method extends Member with HasGenerics {
 
     @override
     String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes);
+        if (altName != null) {
+            writer.writeLine('@JS("${getName()}")');
+        }
+        writer.writeIndented("external ");
+        type.writeOutput(writer);
+        writer
+            ..write(" ")
+            ..write(this.getName());
+
+        if (!this.generics.isEmpty) {
+            writer.write("<");
+            for (final GenericRef ref in generics) {
+                ref.writeOutput(writer);
+                if (ref != generics.last) {
+                    writer.write(", ");
+                }
+            }
+            writer.write(">");
+        }
+
+        writer.write("(");
+
+        for (final Parameter parameter in this.arguments) {
+            parameter.writeOutput(writer);
+            if (parameter != arguments.last) {
+                writer.write(", ");
+            }
+        }
+
+        writer.write(");\n");
+    }
 }
 
 class Getter extends Member {
@@ -172,6 +240,14 @@ class Getter extends Member {
 
     @override
     void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes);
+        Field.writeGetter(this, type, writer);
+    }
 }
 
 class Setter extends Member {
@@ -199,6 +275,14 @@ class Setter extends Member {
 
     @override
     void getTypeRefs(Set<TypeRef> references) { this.argument?.processTypeRefs(references); }
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(this.docs, this.notes);
+        Field.writeSetter(this, argument.type, writer);
+    }
 }
 
 class Constructor extends Component {
