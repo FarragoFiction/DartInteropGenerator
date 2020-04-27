@@ -56,7 +56,10 @@ class Module extends Component {
             ..writeLine('import "dart:web_audio" as Audio;')
             ..writeLine('import "dart:web_gl" as WebGL;')
             ..writeLine()
-            ..writeLine('import "package:js/js.dart";');
+            ..writeLine('import "package:js/js.dart";')
+            ..writeLine()
+            ..writeLine('import "promise.dart";')
+        ;
 
         for (final Component component in components.values) {
             if (component == null) { continue; }

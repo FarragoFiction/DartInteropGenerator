@@ -3,8 +3,9 @@ import "components.dart";
 
 abstract class Member extends Component {
     Accessor accessor;
-    bool static;
-    bool abstract;
+    bool static = false;
+    bool abstract = false;
+    bool readonly = false;
 
     bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_");
 
@@ -32,6 +33,7 @@ class Field extends Member {
         // 3 static
         this.static = input[3] != null;
         // 4 readonly
+        this.readonly = input[4] != null;
         // 5 name
         this.name = input[5];
         // 6 optional
@@ -61,7 +63,9 @@ class Field extends Member {
             ..writeLine()
             ..writeDocs(this.docs, this.notes);
         writeGetter(this, type, writer);
-        writeSetter(this, type, writer);
+        if (!readonly) {
+            writeSetter(this, type, writer);
+        }
     }
 
     static void writeGetter(Member member, TypeRef type, OutputWriter writer) {
@@ -69,6 +73,9 @@ class Field extends Member {
             writer.writeLine('@JS("${member.getName()}")');
         }
         writer.writeIndented("external ");
+        if (member.static) {
+            writer.write("static ");
+        }
         type.writeOutput(writer);
         writer
             ..write(" get ")
@@ -81,8 +88,12 @@ class Field extends Member {
         if (member.altName != null) {
             writer.writeLine('@JS("${member.getName()}")');
         }
+        writer.writeIndented("external ");
+        if (member.static) {
+            writer.write("static ");
+        }
         writer
-            ..writeIndented("external set ")
+            ..write("set ")
             ..write(member.getJsName())
             ..write("(")
         ;
@@ -179,6 +190,9 @@ class Method extends Member with HasGenerics {
             writer.writeLine('@JS("${getName()}")');
         }
         writer.writeIndented("external ");
+        if (static) {
+            writer.write("static ");
+        }
         type.writeOutput(writer);
         writer
             ..write(" ")
@@ -286,6 +300,7 @@ class Setter extends Member {
 }
 
 class Constructor extends Component {
+    TypeDef owner;
     bool private;
     Set<Parameter> arguments = <Parameter>{};
 
@@ -318,10 +333,64 @@ class Constructor extends Component {
 
     @override
     void writeOutput(OutputWriter writer) {
+        final ClassDef parent = owner.parentClass;
+
+        // wish I didn't have to ignore this but then I also wish the actual null operator *worked*
+        // ignore: prefer_null_aware_operators
+        final Constructor parentConstructor = parent == null ? null : parent.constructor;
+
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
-            ..writeLine("// Constructor");
+            //..writeLine("// Constructor")
+            ..writeIndented("external ")
+            ..write(owner.getName())
+            ..write("(")
+        ;
+
+        for (final Parameter parameter in this.arguments) {
+            parameter.writeOutput(writer);
+            if (parameter != arguments.last) {
+                writer.write(", ");
+            }
+        }
+
+        writer.write(")");
+        if (parentConstructor != null) {
+            writer.write(":super._js()");
+        }
+        writer.write(";\n");
+
+
+        writer
+            ..writeIndented("external ")
+            ..write(owner.getName())
+            ..write("._js()")
+        ;
+
+        if (parentConstructor != null) {
+            writer.write(":super._js()");
+        }
+        writer.write(";\n");
+    }
+
+    static void writeBlankConstructor(TypeDef clazz, OutputWriter writer) {
+        final ClassDef parent = clazz.parentClass;
+
+        // wish I didn't have to ignore this but then I also wish the actual null operator *worked*
+        // ignore: prefer_null_aware_operators
+        final Constructor parentConstructor = parent == null ? null : parent.constructor;
+
+        writer
+            ..writeIndented("external ")
+            ..write(clazz.getName())
+            ..write("()")
+        ;
+
+        if (parentConstructor != null) {
+            writer.write(":super._js()");
+        }
+        writer.write(";\n");
     }
 }
 

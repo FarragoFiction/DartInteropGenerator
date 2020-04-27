@@ -10,6 +10,8 @@ class TypeDef extends Component with HasGenerics{
     Iterable<Method> methods;
     Iterable<Field> fields;
 
+    TypeDef get parentClass => extend.isEmpty ? null : extend.first.type;
+
     TypeDef() {
         extend = inherits.where((TypeRef ref) => ref.type != null && ref.type is ClassDef);
         implement = inherits.where((TypeRef ref) => ref.type != null && ref.type is InterfaceDef);
@@ -159,6 +161,7 @@ class ClassDef extends TypeDef {
         for(final dynamic item in input[8]) {
             if (item is Constructor) {
                 this.constructor = item;
+                item.owner = this;
             } else if (item is Member) {
                 this.members.add(item);
             } else if (item is List<String>) {
@@ -187,7 +190,11 @@ class ClassDef extends TypeDef {
 
     @override
     void writeContents(OutputWriter writer) {
-        this.constructor?.writeOutput(writer);
+        if (this.constructor == null) {
+            Constructor.writeBlankConstructor(this, writer);
+        } else {
+            this.constructor.writeOutput(writer);
+        }
         super.writeContents(writer);
     }
 
@@ -232,6 +239,10 @@ class InterfaceDef extends TypeDef {
 
     @override
     void writeContents(OutputWriter writer) {
+        if (this.parentClass != null) {
+            Constructor.writeBlankConstructor(this, writer);
+        }
+
         for (final Member member in members) {
             member.writeOutput(writer);
         }
