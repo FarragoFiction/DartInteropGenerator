@@ -16,4 +16,29 @@ class Variable extends Component {
 
     @override
     void getTypeRefs(Set<TypeRef> references) {}
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeLine("/* var */")
+            ..writeDocs(docs, notes);
+
+        if (this.altName != null) {
+            writer.writeLine('@JS("${this.getName()}")');
+        } else {
+            writer.writeLine('@JS()');
+        }
+        writer.writeIndented("external ");
+        /*if (member.static) {
+            writer.write("static ");
+        }*/
+        //type.writeOutput(writer);
+        writer
+            ..write("dynamic")
+            ..write(" get ")
+            ..write(this.getJsName())
+            ..write(";\n")
+        ;
+    }
 }

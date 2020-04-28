@@ -217,7 +217,9 @@ class Method extends Member with HasGenerics {
     }
 }
 
-class Getter extends Member {
+abstract class GetterSetter {}
+
+class Getter extends Member implements GetterSetter {
     TypeRef type;
 
     @override
@@ -259,7 +261,7 @@ class Getter extends Member {
     }
 }
 
-class Setter extends Member {
+class Setter extends Member implements GetterSetter {
     Parameter argument;
 
     @override
@@ -407,4 +409,12 @@ class ArrayAccess extends Member {
 
     @override
     void getTypeRefs(Set<TypeRef> references) {}
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeDocs(docs, notes)
+            ..writeLine("/* array access */");
+    }
 }

@@ -43,8 +43,10 @@ class Module extends Component {
     @override
     String toString() => "${super.toString()}:$components";
 
+    String getFileName() => name.toLowerCase().replaceAll(".", "_");
+
     @override
-    void writeOutput(OutputWriter writer) {
+    void writeOutput(OutputWriter writer, [List<String> importNames]) {
         writer
             ..writeLine('@JS("$name")')
             ..writeLine('library $name;')
@@ -57,9 +59,15 @@ class Module extends Component {
             ..writeLine('import "dart:web_gl" as WebGL;')
             ..writeLine()
             ..writeLine('import "package:js/js.dart";')
-            ..writeLine()
-            ..writeLine('import "promise.dart";')
         ;
+
+        if (importNames != null) {
+            writer.writeLine();
+            for (final String importName in importNames) {
+                if (importName == this.getFileName()) { continue; }
+                writer.writeLine('import "$importName.dart";');
+            }
+        }
 
         for (final Component component in components.values) {
             if (component == null) { continue; }

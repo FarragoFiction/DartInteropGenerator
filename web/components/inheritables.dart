@@ -51,6 +51,38 @@ class TypeDef extends Component with HasGenerics{
         }
     }
 
+    void deduplicate() {
+        final List<Member> memberList = members.toList();
+        final Set<Member> prune = <Member>{};
+        for (int i=0; i<members.length; i++) {
+            for (int j = i+1; j<members.length; j++) {
+                final Member member = memberList[i];
+                final Member otherMember = memberList[j];
+
+                if (otherMember.getJsName() == member.getJsName() ) {
+                    if (otherMember.runtimeType == member.runtimeType) {
+                        prune.add(otherMember);
+                        //print("Removing duplicate Member ${member.getName()} from ${this.getName()}");
+                    } else if ((member is GetterSetter) || (otherMember is GetterSetter)) {
+                        final bool memberIs = member is GetterSetter;
+                        final bool otherIs = otherMember is GetterSetter;
+
+                        if (memberIs && otherIs) {
+                            // do nothing
+                        } else if (memberIs) {
+                            otherMember.altName = "${otherMember.getJsName()}_";
+                        } else if (otherIs) {
+                            member.altName = "${otherMember.getJsName()}_";
+                        } else {
+                            otherMember.altName = "${otherMember.getJsName()}_";
+                        }
+                    }
+                }
+            }
+        }
+        members.removeAll(prune);
+    }
+
     @override
     String toString() => "${super.toString()}:{${getPrintComponents().join(", ")}}";
     @override
@@ -172,6 +204,8 @@ class ClassDef extends TypeDef {
             }
         }
         // 11 close brace
+
+        this.deduplicate();
     }
 
     @override
@@ -233,6 +267,8 @@ class InterfaceDef extends TypeDef {
             }
         }
         // 7 close brace
+
+        this.deduplicate();
     }
 
     @override

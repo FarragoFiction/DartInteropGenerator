@@ -59,6 +59,46 @@ class FunctionDeclaration extends Component with HasGenerics {
 
     @override
     String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer
+            ..writeLine()
+            ..writeLine("/* top level function */")
+            ..writeDocs(this.docs, this.notes);
+        if (altName != null) {
+            writer.writeLine('@JS("${getName()}")');
+        } else {
+            writer.writeLine('@JS()');
+        }
+        writer.writeIndented("external ");
+        type.writeOutput(writer);
+        writer
+            ..write(" ")
+            ..write(this.getJsName());
+
+        if (!this.generics.isEmpty) {
+            writer.write("<");
+            for (final GenericRef ref in generics) {
+                ref.writeOutput(writer);
+                if (ref != generics.last) {
+                    writer.write(", ");
+                }
+            }
+            writer.write(">");
+        }
+
+        writer.write("(");
+
+        for (final Parameter parameter in this.arguments) {
+            parameter.writeOutput(writer);
+            if (parameter != arguments.last) {
+                writer.write(", ");
+            }
+        }
+
+        writer.write(");\n");
+    }
 }
 
 class Parameter extends Component {

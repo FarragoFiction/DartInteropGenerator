@@ -24,6 +24,10 @@ class TypeRef extends Component with HasGenerics {
 
     @override
     void writeOutput(OutputWriter writer) {
+        if (this.getName().startsWith("_")) {
+            writer.write("dynamic");
+            return;
+        }
         writer.write("JsArray<" * array);
         if (type != null) {
             type.writeReference(writer, generics);

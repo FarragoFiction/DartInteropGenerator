@@ -4,6 +4,8 @@ import "components/components.dart";
 import "parser.dart";
 
 class Processor {
+    static const String topLevelFilename = "interop_globals";
+
     final Map<String, TypeDef> presetTypes = <String, TypeDef>{};
     final Set<String> jsClasses = <String>{};
 
@@ -82,11 +84,26 @@ class Processor {
         tsd.checkTypeNames(typeNames);
 
         final Map<String, String> outputs = <String,String>{};
+        final List<String> importNames = <String>["promise"];
+
+        for (final Module module in tsd.modules.values) {
+            importNames.add(module.getFileName());
+        }
+        if (!tsd.topLevelComponents.isEmpty) {
+            importNames.add(topLevelFilename);
+        }
+        importNames.sort();
 
         for (final Module module in tsd.modules.values) {
             final OutputWriter writer = new OutputWriter();
-            module.writeOutput(writer);
-            outputs[module.name] = writer.toString();
+            module.writeOutput(writer, importNames);
+            outputs[module.getFileName()] = writer.toString();
+        }
+
+        if (!tsd.topLevelComponents.isEmpty) {
+            final OutputWriter writer = new OutputWriter();
+            tsd.writeOutput(writer, importNames);
+            outputs[topLevelFilename] = writer.toString();
         }
 
         return outputs;

@@ -51,7 +51,7 @@ Future<void> main(List<String> arguments) async {
         //print(files[name]);
         //print("\nend $name");
 
-        final File outputFile = new File(Path.join(outputPath, "${name.toLowerCase().replaceAll(".", "_")}.dart"));
+        final File outputFile = new File(Path.join(outputPath, "$name.dart"));
         outputFile.writeAsString(files[name]);
     }
 }

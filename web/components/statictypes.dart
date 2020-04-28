@@ -136,9 +136,6 @@ abstract class StaticTypes {
         "XRRigidTransform": typeDynamic,
         "XRSpace": typeDynamic,
         "XRPose": typeDynamic,
-        "XRRay": typeDynamic,
-        "XRPlane": typeDynamic,
-        "XRAnchor": typeDynamic,
     };
 }
 

@@ -19,6 +19,8 @@ abstract class Component {
     List<String> docs;
     final List<String> notes = <String>[];
 
+    bool shouldWriteToFile = true;
+
     void process(dynamic input) {
         if (!(input is List<dynamic>)) { return; }
         final List<dynamic> data = input;
@@ -39,7 +41,9 @@ abstract class Component {
     String getName() => name;
     String getJsName() => this.altName != null ? this.altName : this.getName();
 
-    void writeOutput(OutputWriter writer) {}
+    void writeOutput(OutputWriter writer) {
+        print("Component missing output: $runtimeType ${getName()}");
+    }
 
     @override
     String toString() => "(${displayString()})";
