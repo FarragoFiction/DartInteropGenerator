@@ -155,16 +155,11 @@ class Method extends Member with HasGenerics {
         // make sure generic typed arguments are marked as such
         for (final GenericRef ref in generics) {
             ref.type.genericOf = this;
-            for (final Parameter arg in arguments) {
-                if (arg.type.getName() == ref.getName()) {
-                    arg.type.genericOf = this;
-                    break;
-                }
-            }
-            if (type.getName() == ref.getName()) {
-                type.genericOf = this;
-            }
         }
+        for (final Parameter arg in arguments) {
+            HasGenerics.setGenerics(this, this, arg.type);
+        }
+        HasGenerics.setGenerics(this, this, this.type);
     }
 
     @override
@@ -196,7 +191,7 @@ class Method extends Member with HasGenerics {
         type.writeOutput(writer);
         writer
             ..write(" ")
-            ..write(this.getName());
+            ..write(this.getJsName());
 
         if (!this.generics.isEmpty) {
             writer.write("<");
@@ -300,7 +295,6 @@ class Setter extends Member {
 }
 
 class Constructor extends Component {
-    TypeDef owner;
     bool private;
     Set<Parameter> arguments = <Parameter>{};
 

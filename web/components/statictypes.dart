@@ -136,6 +136,9 @@ abstract class StaticTypes {
         "XRRigidTransform": typeDynamic,
         "XRSpace": typeDynamic,
         "XRPose": typeDynamic,
+        "XRRay": typeDynamic,
+        "XRPlane": typeDynamic,
+        "XRAnchor": typeDynamic,
     };
 }
 
@@ -176,4 +179,14 @@ class ArrayBrackets {
 
     @override
     String toString() => "A${"[]"*count}";
+}
+
+abstract class ForbiddenNames {
+    static const Set<String> names = <String>{
+        "continue",
+        "class",
+        "return",
+        "interface",
+        "break",
+    };
 }

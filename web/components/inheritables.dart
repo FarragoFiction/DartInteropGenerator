@@ -164,6 +164,7 @@ class ClassDef extends TypeDef {
                 item.owner = this;
             } else if (item is Member) {
                 this.members.add(item);
+                item.owner = this;
             } else if (item is List<String>) {
                 // stray comment, discard unfortunately
             } else {

@@ -78,6 +78,7 @@ class Processor {
 
         // do a pass to correct member names for types
         final Set<String> typeNames = typeDefs.map((TypeDef def) => def.getName()).toSet();
+        typeNames.addAll(ForbiddenNames.names);
         tsd.checkTypeNames(typeNames);
 
         final Map<String, String> outputs = <String,String>{};

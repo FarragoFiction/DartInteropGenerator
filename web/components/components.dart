@@ -13,6 +13,7 @@ export "typedeclaration.dart";
 export "variable.dart";
 
 abstract class Component {
+    TypeDef owner;
     String name;
     String altName;
     List<String> docs;
@@ -84,15 +85,34 @@ mixin HasGenerics on Component {
                 references.add(ref);
                 continue;
             }
-            for (final GenericRef generic in generics) {
+
+            setGenerics(this, this, ref);
+            /*for (final GenericRef generic in generics) {
                 //print("vs ${generic.runtimeType} ${generic.type.name} $generic");
                 if (ref.name == generic.getName()) {
                     //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
                     ref.genericOf = this;
                     continue;
                 }
-            }
+            }*/
             references.add(ref);
+        }
+    }
+
+    static void setGenerics(Component parent, HasGenerics genericOwner, TypeRef checkType) {
+        if (checkType == null) { return; }
+        for (final GenericRef generic in genericOwner.generics) {
+            if (checkType.name == generic.getName()) {
+                //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
+                checkType.genericOf = parent;
+                //continue;
+            }
+        }
+        for (final GenericRef generic in checkType.generics) {
+            setGenerics(parent, genericOwner, generic.type);
+        }
+        if (parent.owner != null) {
+            setGenerics(parent.owner, parent.owner, checkType);
         }
     }
 }

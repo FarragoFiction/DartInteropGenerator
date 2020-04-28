@@ -1,9 +1,9 @@
 import "components.dart";
 
-class TypeRef extends Component {//} with HasGenerics {
+class TypeRef extends Component with HasGenerics {
 
     TypeDef type;
-    final Set<GenericRef> generics = <GenericRef>{};
+    //final Set<GenericRef> generics = <GenericRef>{};
     int array = 0;
     Component genericOf;
 
