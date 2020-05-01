@@ -9,6 +9,7 @@ abstract class StaticTypes {
 
     static final ClassDef typeList = new ClassDef()..name="List";
     static final ClassDef typeJsArray = new ClassDef()..name="JsArray";
+    static final ClassDef typeJsFunction = new ClassDef()..name="JsFunction";
 
     static final TypeModifier typePartial = new TypeModifier()..name="Partial"..generics.add(new GenericRef()..name="T");
 
@@ -17,7 +18,7 @@ abstract class StaticTypes {
         if (entry.value is TypeDef) {
             return entry.value;
         } else if (entry.value is String) {
-            return new TypeDef()..name = entry.value;
+            return new ClassDef()..name = entry.value;
         } else {
             throw Exception("Invalid type mapping entry: ${entry.value}");
         }
@@ -30,7 +31,7 @@ abstract class StaticTypes {
         "unknown": typeDynamic,
         "undefined": typeDynamic, // this one is weird
         "object": typeDynamic, // object literals
-        "Function": "Function",
+        "Function": typeJsFunction,
         "Promise": "Promise",
         "Error": "Error",
         "Event": "HTML.Event",
@@ -112,6 +113,7 @@ abstract class StaticTypes {
         "WebGLVertexArrayObject": "WebGL.VertexArrayObject",
         "WebGLTexture": "WebGL.Texture",
         "WebGLRenderbuffer": "WebGL.Renderbuffer",
+        "WebGLContextAttributes": "JsArray<dynamic>",
 
         // dart:web_audio as Audio
         "AudioNode": "Audio.AudioNode",
@@ -185,5 +187,9 @@ abstract class ForbiddenNames {
         "return",
         "interface",
         "break",
+    };
+
+    static const Set<String> ignoredMembers = <String>{
+        "toString",
     };
 }

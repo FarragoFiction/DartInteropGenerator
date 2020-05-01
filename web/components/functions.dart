@@ -90,11 +90,25 @@ class FunctionDeclaration extends Component with HasGenerics {
 
         writer.write("(");
 
+        bool optionalsStarted = false;
         for (final Parameter parameter in this.arguments) {
+            if (!optionalsStarted) {
+                if (parameter.optional) {
+                    optionalsStarted = true;
+                    writer.write("[");
+                }
+            } else {
+                if (!parameter.optional) {
+                    print("BAD OPTIONAL PARAMETER IN ${this.getName()}: ${parameter.getName()}");
+                }
+            }
             parameter.writeOutput(writer);
             if (parameter != arguments.last) {
                 writer.write(", ");
             }
+        }
+        if (optionalsStarted) {
+            writer.write("]");
         }
 
         writer.write(");\n");
@@ -103,6 +117,8 @@ class FunctionDeclaration extends Component with HasGenerics {
 
 class Parameter extends Component {
     TypeRef type;
+    bool optional = false;
+    bool isArgs = false;
 
     @override
     void processList(List<dynamic> input) {
@@ -112,8 +128,13 @@ class Parameter extends Component {
         if (input[1] is List<dynamic>) {
             // name and optional
             this.name = input[1][0];
+            this.optional = input[1][1] != null;
         } else {
             // args
+            //print("args ...");
+            this.name = "args";
+            this.optional = true;
+            this.isArgs = true;
         }
         // 2 colon
         // 3 type
@@ -136,6 +157,10 @@ class Parameter extends Component {
         writer
             ..write(" ")
             ..write(this.getName());
+
+        /*if(optional) {
+            writer.write("/*?*/");
+        }*/
     }
 }
 

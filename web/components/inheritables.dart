@@ -1,9 +1,13 @@
 import "components.dart";
 
 class TypeDef extends Component with HasGenerics{
+    bool isAbstract = false;
     final Set<TypeRef> inherits = <TypeRef>{};
     Iterable<TypeRef> extend;
     Iterable<TypeRef> implement;
+
+    final Set<TypeDef> ancestors = <TypeDef>{};
+    final Set<TypeDef> descendants = <TypeDef>{};
 
     //final Set<GenericRef> generics = <GenericRef>{};
     final Set<Member> members = <Member>{};
@@ -152,7 +156,7 @@ class TypeDef extends Component with HasGenerics{
     String writeType() => "type";
     void writeContents(OutputWriter writer) {
         for (final Member member in members) {
-            if (member.accessor == Accessor.private || member.getName().startsWith("_")) { continue; }
+            if (ForbiddenNames.ignoredMembers.contains(member.getName()) || member.accessor == Accessor.private || member.getName().startsWith("_")) { continue; }
             member.writeOutput(writer);
         }
     }
@@ -171,6 +175,7 @@ class ClassDef extends TypeDef {
         this.docs = input[0];
         // 1 export?
         // 2 abstract?
+        this.isAbstract = input[2] != null;
         // 3 class keyword
         // 4 name and generics
         this.name = input[4].name;
@@ -234,10 +239,12 @@ class ClassDef extends TypeDef {
     }
 
     @override
-    String writeType() => "class";
+    String writeType() => this.isAbstract ? "abstract class" : "class";
 }
 
 class InterfaceDef extends TypeDef {
+    InterfaceDef() { this.isAbstract = true; }
+
     @override
     void processList(List<dynamic> input) {
 
@@ -260,6 +267,7 @@ class InterfaceDef extends TypeDef {
         for(final dynamic item in input[6]) {
             if (item is Member) {
                 this.members.add(item);
+                item.owner = this;
             } else if (item is List<String>) {
                 // stray comment, discard unfortunately
             } else {
@@ -280,8 +288,6 @@ class InterfaceDef extends TypeDef {
             Constructor.writeBlankConstructor(this, writer);
         }
 
-        for (final Member member in members) {
-            member.writeOutput(writer);
-        }
+        super.writeContents(writer);
     }
 }

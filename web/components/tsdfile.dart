@@ -1,4 +1,3 @@
-
 import "components.dart";
 
 class TSDFile extends Component {
@@ -22,6 +21,21 @@ class TSDFile extends Component {
                 print("TSDFile top level object: $item");
             }
         }
+
+        final Set<Component> toRemove = <Component>{};
+        for (final Component comp in topLevelComponents) {
+            for (final Module m in modules.values) {
+                final String cName = comp.getName();
+                if (m.components.containsKey(cName)) {
+                    final Component mComp = m.components[cName];
+
+                    if (comp is InterfaceDef && mComp is ClassDef) {
+                        toRemove.add(comp);
+                    }
+                }
+            }
+        }
+        this.topLevelComponents.removeAll(toRemove);
     }
 
     void getTypeDefs(Set<TypeDef> definitions) {
@@ -80,6 +94,14 @@ class TSDFile extends Component {
             } else {
                 ref.shouldWriteToFile = false;
                 //print("Excluding ${ref.runtimeType} ${ref.getName()} as it is a js class");
+            }
+        }
+    }
+
+    Iterable<TypeDef> allTypes() sync* {
+        for (final Module module in modules.values) {
+            for (final TypeDef type in module.components.values.whereType()) {
+                yield type;
             }
         }
     }

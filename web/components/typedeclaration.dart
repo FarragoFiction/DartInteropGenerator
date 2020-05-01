@@ -95,6 +95,9 @@ class TypeModifier extends TypeDeclaration {
         final TypeRef ref = input[3];
         this.name = ref.name;
         this.generics.addAll(ref.generics);
+        if (generics.isEmpty) {
+            print("Type modifier with no generics? ${this.name}");
+        }
         // 4 =
         // 5 some clump of text
         // 6 semicolon

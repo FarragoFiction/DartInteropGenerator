@@ -31,6 +31,8 @@ abstract class Component {
     void getTypeRefs(Set<TypeRef> references);
     void processTypeRefs(Set<TypeRef> references) { getTypeRefs(references); }
 
+    Iterable<TypeRef> getOtherTypesForGenericCheck() => null;
+
     void checkTypeNames(Set<String> types){
         final String baseName = getName();
         if (types.contains(baseName)) {
@@ -67,22 +69,6 @@ mixin HasGenerics on Component {
         final Set<TypeRef> intermediary = <TypeRef>{};
         this.getTypeRefs(intermediary);
 
-        //print("Refs in ${this.name} -------------- $intermediary");
-
-        /*references.addAll(intermediary.where((TypeRef ref) {
-            //print("${ref.runtimeType} ${ref.name} ---");
-            if (ref.type != null || ref.name == null ) { return true; }
-            for (final GenericRef generic in generics) {
-                //print("vs ${generic.runtimeType} ${generic.type.name} $generic");
-                if (ref.name == generic.getName()) {
-                    //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
-                    ref.genericOf = this;
-                    return false;
-                }
-            }
-            return true;
-        }));*/
-
         for (final TypeRef ref in intermediary) {
             //print("${ref.runtimeType} ${ref.name} ---");
             if (ref.type != null || ref.name == null ) {
@@ -91,30 +77,30 @@ mixin HasGenerics on Component {
             }
 
             setGenerics(this, this, ref);
-            /*for (final GenericRef generic in generics) {
-                //print("vs ${generic.runtimeType} ${generic.type.name} $generic");
-                if (ref.name == generic.getName()) {
-                    //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
-                    ref.genericOf = this;
-                    continue;
-                }
-            }*/
             references.add(ref);
         }
     }
 
     static void setGenerics(Component parent, HasGenerics genericOwner, TypeRef checkType) {
         if (checkType == null) { return; }
+
         for (final GenericRef generic in genericOwner.generics) {
-            if (checkType.name == generic.getName()) {
+            if (checkType.getName() == generic.getName()) {
                 //print("excluding type $ref from $this as it is in $generics (${ref.name} == ${generic.type.name})");
                 checkType.genericOf = parent;
-                //continue;
             }
         }
         for (final GenericRef generic in checkType.generics) {
             setGenerics(parent, genericOwner, generic.type);
         }
+
+        final Iterable<TypeRef> extra = checkType.getOtherTypesForGenericCheck();
+        if (extra != null) {
+            for (final TypeRef ref in extra) {
+                setGenerics(parent, genericOwner, ref);
+            }
+        }
+
         if (parent.owner != null) {
             setGenerics(parent.owner, parent.owner, checkType);
         }

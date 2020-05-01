@@ -7,6 +7,9 @@ abstract class Member extends Component {
     bool abstract = false;
     bool readonly = false;
 
+    Set<Member> ancestors = <Member>{};
+    Set<Member> descendants = <Member>{};
+
     bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_");
 
     @override
@@ -62,15 +65,23 @@ class Field extends Member {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes);
+        if (!this.ancestors.isEmpty) {
+            writer.writeLine("@override");
+        }
         writeGetter(this, type, writer);
         if (!readonly) {
+            if (!this.ancestors.isEmpty) {
+                writer.writeLine("@override");
+            }
             writeSetter(this, type, writer);
         }
     }
 
-    static void writeGetter(Member member, TypeRef type, OutputWriter writer) {
+    static void writeGetter(Member member, TypeRef type, OutputWriter writer, [String displayName]) {
+        displayName ??= member.getName();
+
         if (member.altName != null) {
-            writer.writeLine('@JS("${member.getName()}")');
+            writer.writeLine('@JS("$displayName")');
         }
         writer.writeIndented("external ");
         if (member.static) {
@@ -84,9 +95,11 @@ class Field extends Member {
         ;
     }
 
-    static void writeSetter(Member member, TypeRef type, OutputWriter writer) {
+    static void writeSetter(Member member, TypeRef type, OutputWriter writer, [String displayName]) {
+        displayName ??= member.getName();
+
         if (member.altName != null) {
-            writer.writeLine('@JS("${member.getName()}")');
+            writer.writeLine('@JS("$displayName")');
         }
         writer.writeIndented("external ");
         if (member.static) {
@@ -105,7 +118,7 @@ class Field extends Member {
 class Method extends Member with HasGenerics {
     TypeRef type;
     //Set<GenericRef> generics = <GenericRef>{};
-    Set<Parameter> arguments = <Parameter>{};
+    List<Parameter> arguments = <Parameter>[];
 
     @override
     void processList(List<dynamic> input) {
@@ -173,6 +186,15 @@ class Method extends Member with HasGenerics {
         this.type?.processTypeRefs(references);
     }
 
+    int countRequiredParams() {
+        for (int i=0; i<this.arguments.length; i++) {
+            if (this.arguments[i].optional) {
+                return i;
+            }
+        }
+        return arguments.length;
+    }
+
     @override
     String displayString() => "${super.displayString()}${generics.isEmpty ? "" : "<${generics.join(",")}>"}: $arguments -> $type";
 
@@ -181,6 +203,9 @@ class Method extends Member with HasGenerics {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes);
+        if (!this.ancestors.isEmpty) {
+            writer.writeLine("@override");
+        }
         if (altName != null) {
             writer.writeLine('@JS("${getName()}")');
         }
@@ -206,11 +231,25 @@ class Method extends Member with HasGenerics {
 
         writer.write("(");
 
+        bool optionalsStarted = false;
         for (final Parameter parameter in this.arguments) {
+            if (!optionalsStarted) {
+                if (parameter.optional) {
+                    optionalsStarted = true;
+                    writer.write("[");
+                }
+            } else {
+                if (!parameter.optional) {
+                    print("BAD OPTIONAL PARAMETER IN ${this.getName()}: ${parameter.getName()}");
+                }
+            }
             parameter.writeOutput(writer);
             if (parameter != arguments.last) {
                 writer.write(", ");
             }
+        }
+        if (optionalsStarted) {
+            writer.write("]");
         }
 
         writer.write(");\n");
@@ -221,6 +260,7 @@ abstract class GetterSetter {}
 
 class Getter extends Member implements GetterSetter {
     TypeRef type;
+    String fieldName;
 
     @override
     void processList(List<dynamic> input) {
@@ -234,7 +274,8 @@ class Getter extends Member implements GetterSetter {
         this.static = input[3] != null;
         // 4 get
         // 5 name
-        this.name = input[5];
+        this.fieldName = input[5];
+        this.name = "${fieldName}_getter";
         // 6 ()
         // 7 type
         if (input[7] is List<dynamic>) {
@@ -257,12 +298,27 @@ class Getter extends Member implements GetterSetter {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes);
-        Field.writeGetter(this, type, writer);
+        if (!this.ancestors.isEmpty) {
+            writer.writeLine("@override");
+        }
+        Field.writeGetter(this, type, writer, fieldName);
     }
+
+    @override
+    void checkTypeNames(Set<String> types){
+        final String baseName = fieldName;
+        if (types.contains(baseName)) {
+            altName = "${baseName}_js";
+        }
+    }
+
+    @override
+    String getJsName() => this.altName != null ? this.altName : this.fieldName;
 }
 
 class Setter extends Member implements GetterSetter {
     Parameter argument;
+    String fieldName;
 
     @override
     void processList(List<dynamic> input) {
@@ -276,7 +332,8 @@ class Setter extends Member implements GetterSetter {
         this.static = input[3] != null;
         // 4 set
         // 5 name
-        this.name = input[5];
+        this.fieldName = input[5];
+        this.name = "${fieldName}_setter";
         // 6 (
         // 7 arg
         this.argument = input[7];
@@ -292,8 +349,22 @@ class Setter extends Member implements GetterSetter {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes);
-        Field.writeSetter(this, argument.type, writer);
+        if (!this.ancestors.isEmpty) {
+            writer.writeLine("@override");
+        }
+        Field.writeSetter(this, argument.type, writer, fieldName);
     }
+
+    @override
+    void checkTypeNames(Set<String> types){
+        final String baseName = fieldName;
+        if (types.contains(baseName)) {
+            altName = "${baseName}_js";
+        }
+    }
+
+    @override
+    String getJsName() => this.altName != null ? this.altName : this.fieldName;
 }
 
 class Constructor extends Component {
@@ -338,17 +409,30 @@ class Constructor extends Component {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
-            //..writeLine("// Constructor")
             ..writeIndented("external ")
             ..write(owner.getName())
             ..write("(")
         ;
 
+        bool optionalsStarted = false;
         for (final Parameter parameter in this.arguments) {
+            if (!optionalsStarted) {
+                if (parameter.optional) {
+                    optionalsStarted = true;
+                    writer.write("[");
+                }
+            } else {
+                if (!parameter.optional) {
+                    print("BAD OPTIONAL PARAMETER IN ${this.getName()}: ${parameter.getName()}");
+                }
+            }
             parameter.writeOutput(writer);
             if (parameter != arguments.last) {
                 writer.write(", ");
             }
+        }
+        if (optionalsStarted) {
+            writer.write("]");
         }
 
         writer.write(")");

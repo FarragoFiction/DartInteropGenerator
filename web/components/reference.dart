@@ -61,13 +61,26 @@ class TypeUnionRef extends TypeRef {
         if (unionRefs.length == 1) {
             unionRefs.first.writeOutput(writer);
         } else {
-            writer.write("dynamic");
+            final Set<TypeRef> check = <TypeRef>{};
+            for (final TypeRef ref in unionRefs) {
+                if (ref.type != StaticTypes.typeVoid) {
+                    check.add(ref);
+                }
+            }
+            if (check.length == 1) {
+                check.first.writeOutput(writer);
+            } else {
+                writer.write("dynamic");
+            }
         }
     }
+
+    @override
+    Iterable<TypeRef> getOtherTypesForGenericCheck() => unionRefs.where((TypeRef ref) => ref.type != StaticTypes.typeVoid);
 }
 
 class LambdaRef extends TypeRef {
     LambdaRef() {
-        this.type = StaticTypes.typeDynamic;
+        this.type = StaticTypes.typeJsFunction;
     }
 }
