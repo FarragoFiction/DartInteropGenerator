@@ -72,6 +72,13 @@ class Module extends Component {
             }
         }
 
+        writer.writeLine();
+        final TSDFile parent = this.parentComponent;
+        if (!parent.topLevelComponents.isEmpty) {
+            writer.writeLine('export "interop_globals.dart";');
+        }
+        writer.writeLine('export "promise.dart";');
+
         for (final Component component in components.values) {
             if (component == null) { continue; }
             if (component.getName().startsWith("_")) { continue; }

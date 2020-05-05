@@ -10,6 +10,7 @@ class TSDFile extends Component {
             if (item is Module) {
                 if (!modules.containsKey(item.name)) {
                     modules[item.name] = item;
+                    item.parentComponent = this;
                 } else {
                     final Module module = modules[item.name];
                     //module.components.addAll(item.components);
@@ -17,6 +18,7 @@ class TSDFile extends Component {
                 }
             } else if (item is Component) {
                 this.topLevelComponents.add(item);
+                //item.parentComponent = this;
             } else {
                 print("TSDFile top level object: $item");
             }
