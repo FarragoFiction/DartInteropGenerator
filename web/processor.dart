@@ -9,6 +9,8 @@ class Processor {
     final Map<String, TypeDef> presetTypes = <String, TypeDef>{};
     final Set<String> jsClasses = <String>{};
 
+    final Map<String, String> manualFixes = <String,String>{};
+
     Processor() {
         presetTypes.addAll(StaticTypes.mapping);
     }
@@ -40,11 +42,6 @@ class Processor {
 
         final Set<TypeDef> typeDefs = <TypeDef>{};
         tsd.getTypeDefs(typeDefs);
-        for (TypeDef def in typeDefs) {
-            if (def.getName() == "Gamepad") {
-                print("gamepad is... ${def.runtimeType}");
-            }
-        }
 
         //prune the js classes out because we don't want the mixins
         typeDefs.removeWhere((TypeDef def) => jsClasses.contains(def.getName()));
@@ -72,12 +69,17 @@ class Processor {
 
         final Set<String> unresolved = <String>{};
 
+        final Set<ConstrainedObject> inlineObjects = <ConstrainedObject>{};
+
         for (final TypeRef ref in typeRefs) {
-            if (ref.type == null) {
+            if (ref is ConstrainedObject) {
+                inlineObjects.add(ref);
+            } else if (ref.type == null) {
                 final String name = ref.getName();
                 if (typeMap.containsKey(name)) {
                     ref.type = typeMap[name];
                 } else if (ref.genericOf == null) {
+                    //print("${ref.getName()} not in typeMap${ref.owner == null ? "" : " (from ${ref.owner.getName()})"}");
                     // if it's not a generic, stick it in the unresolved list
                     unresolved.add(name);
                 }
@@ -96,17 +98,25 @@ class Processor {
 
         // ################################################## SORT OUT INHERITANCE ##################################################
 
-        fixInheritance(tsd);
+        fixInheritance(tsd, inlineObjects);
 
         print("${new DateTime.now().difference(startTime)}: Inheritance fixed");
 
         // ################################################## WRITE ##################################################
 
         // write all the outputs and hand them back
-        return write(tsd);
+        final Map<String,String> outputs = write(tsd);
+
+        print("${new DateTime.now().difference(startTime)}: Applying manual fixes");
+
+        applyManualFixes(outputs);
+
+        print("${new DateTime.now().difference(startTime)}: Done");
+
+        return outputs;
     }
 
-    void fixInheritance(TSDFile tsd) {
+    void fixInheritance(TSDFile tsd, Set<ConstrainedObject> inlinedObjects) {
         // set up inheritance relationships
         for (final TypeDef type in tsd.allTypes()) {
             for(final TypeRef inheritRef in type.inherits) {
@@ -120,6 +130,7 @@ class Processor {
         }
 
         // ################################################## relationships between members ##################################################
+
         for (final TypeDef type in tsd.allTypes()) {
             for (final Member member in type.members) {
                 // check each direction
@@ -146,7 +157,7 @@ class Processor {
         }
 
         // ################################################## lambdas vs functions ##################################################
-        final Set<Method> toReplace = <Method>{};
+        final Map<Method, LambdaRef> toReplace = <Method, LambdaRef>{};
 
         // find all the candidates for fixing
         for (final TypeDef type in tsd.allTypes()) {
@@ -158,9 +169,9 @@ class Processor {
                         }
 
                         if (m is Field) {
-                            if (m.type.type == StaticTypes.typeJsFunction) {
+                            if (m.type is LambdaRef) {
                                 // this is likely a lambda field!
-                                toReplace.add(member);
+                                toReplace[member] = m.type;
 
                                 return false;
                             }
@@ -173,15 +184,15 @@ class Processor {
         }
 
         // do the replacement
-        for (final Method method in toReplace) {
-            final TypeDef type = method.owner;
+        for (final Method method in toReplace.keys) {
+            final TypeDef type = method.parentComponent;
 
             final Field replacementField = new Field()
                 ..name = method.name
-                ..type = (new TypeRef()..type = StaticTypes.typeJsFunction)
+                ..type = toReplace[method]
                 ..ancestors = method.ancestors
                 ..descendants = method.descendants
-                ..owner = type
+                ..parentComponent = type
             ;
 
             for (final Member member in method.ancestors) {
@@ -228,7 +239,7 @@ class Processor {
                         for (int i=member.arguments.length; i<ancestorWithMostParameters.arguments.length; i++) {
                             final Parameter other = ancestorWithMostParameters.arguments[i];
                             final Parameter p = new Parameter()
-                                ..owner = type
+                                ..parentComponent = type
                                 ..name = other.name
                                 ..type = other.type
                                 ..optional = true
@@ -238,7 +249,7 @@ class Processor {
                         }
                     }
                     if (member.getName() == "createCylinderEmitter") {
-                        print("${member.getName()} from ${member.owner.getName()}: $fewestRequiredParameters < $baseReq?");
+                        print("${member.getName()} from ${member.parentComponent.getName()}: $fewestRequiredParameters < $baseReq?");
                     }
                     if (fewestRequiredParameters < baseReq) {
                         for (int i=fewestRequiredParameters; i<baseReq; i++) {
@@ -249,24 +260,51 @@ class Processor {
             }
         }
 
-        // ################################################## more specific child types ##################################################
+        // ################################################## js object template interfaces ##################################################
 
-        /*for (final TypeDef type in tsd.allTypes()) {
-            for (final Member member in type.members) {
-                if (member is Field) {
-                    processTypeRef(member, (Field t) => t.type);
-                } else if (member is Getter) {
-                    processTypeRef(member, (Getter t) => t.type);
-                } else if (member is Setter) {
-                    processTypeRef(member, (Setter t) => t.argument.type);
-                } else if (member is Method) {
-                    processTypeRef(member, (Method t) => t.type); // return type
-                    for (int i=0; i<member.arguments.length; i++) {
-                        processTypeRef(member, (Method t) => t.arguments[i].type); // argument
-                    }
+        for (final InterfaceDef type in tsd.allTypes().whereType()) {
+            if (type.descendants.isEmpty && type.methods.isEmpty) {
+                // nothing implements this interface, and it has no methods... probably safe to make an object?
+                type.isObjectTemplate = true;
+            }
+        }
+
+        // ################################################## object templates for inlined objects ##################################################
+
+        final Map<String,InlinedObjectType> inlinedObjectTypes = <String,InlinedObjectType>{};
+        final Set<String> typeNames = tsd.allTypes().map((TypeDef d) => d.getName()).toSet();
+
+        int mergeCount = 0;
+        for (final ConstrainedObject obj in inlinedObjects) {
+            if (obj.type == null && !obj.fields.isEmpty) {
+                final InlinedObjectType type = new InlinedObjectType()
+                    ..basedOn=obj
+                    ..members.addAll(obj.fields)
+                ;
+                obj.type = type;
+
+                if (typeNames.contains(type.getName())) {
+                    type.name = "${type.name}Object";
+                }
+
+                if (inlinedObjectTypes.containsKey(type.getName())) {
+                    final InlinedObjectType existing = inlinedObjectTypes[type.getName()];
+
+                    existing.merge(type);
+                    mergeCount++;
+
+                    obj.type = existing;
+                } else {
+                    inlinedObjectTypes[type.getName()] = type;
                 }
             }
-        }*/
+        }
+
+        for(final InlinedObjectType t in inlinedObjectTypes.values) {
+            t.processGenerics();
+        }
+        print("inlined object templates: ${inlinedObjects.length}, merged $mergeCount");
+        tsd.topLevelComponents.addAll(inlinedObjectTypes.values);
 
         // ################################################## missing concrete implementations ##################################################
         // IMPORTANT: this section MUST be last because it's lax with relations
@@ -381,6 +419,42 @@ class Processor {
         return outputs;
     }
 
+    void applyManualFixes(Map<String,String> data) {
+        final Set<String> appliedFixes = <String>{};
+
+        for (final String fileName in data.keys) {
+            String fileContent = data[fileName];
+
+            //int id = 0;
+            for (final String fixKey in manualFixes.keys) {
+
+                final Iterable<Match> matches = fixKey.allMatches(fileContent);
+
+                if (!matches.isEmpty) {
+                    //print("Applying fix $id ${matches.length} time${matches.length > 1 ? "s" : ""} to $fileName");
+
+                    if (appliedFixes.contains(fixKey)) {
+                        throw Exception("Fix applied twice: $fixKey");
+                    }
+                    final String fixValue = manualFixes[fixKey];
+
+                    fileContent = fileContent.replaceAll(fixKey, fixValue);
+                    appliedFixes.add(fixKey);
+                }
+
+                //id++;
+            }
+
+            data[fileName] = fileContent;
+        }
+
+        for (final String fixKey in manualFixes.keys) {
+            if (!appliedFixes.contains(fixKey)) {
+                print("Fix not applied: $fixKey");
+            }
+        }
+    }
+
     /// recursive visitor function
     /// thing to visit
     /// function which returns the set of next ones to visit
@@ -440,7 +514,7 @@ class Processor {
                 // ok, cool, we have this type
             } else {
                 // uhoh, one of the refs isn't a supertype of the current ref
-                print("dynamic fallback from ${ref.type.getName()} by ${aRef.type.getName()} in ${type.owner.getName()}.${type.getName()}");
+                print("dynamic fallback from ${ref.type.getName()} by ${aRef.type.getName()} in ${type.parentComponent.getName()}.${type.getName()}");
                 print(superTypes.map((TypeDef d) => d.getName()).toList());
                 print(ancestorTypeRefs);
                 ref.type = StaticTypes.typeDynamic;

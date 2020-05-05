@@ -8,12 +8,14 @@ import "processor.dart";
 
 const String inputArg = "input";
 const String outputArg = "output";
+const String fixesArg = "fixes";
 const String jsArg = "js";
 
 Future<void> main(List<String> arguments) async {
     final ArgParser parser = new ArgParser()
         ..addOption(inputArg, defaultsTo: "input.txt")
         ..addOption(outputArg, defaultsTo: "outputs")
+        ..addOption(fixesArg)
         ..addOption(jsArg)
     ;
 
@@ -40,6 +42,14 @@ Future<void> main(List<String> arguments) async {
         final List<String> jsClasses = list.cast();
         print("JS class list: $jsClasses");
         processor.jsClasses.addAll(jsClasses);
+    }
+
+    if (argResults[fixesArg] != null) {
+        final File fixesFile = new File(Path.join(programPath, argResults[fixesArg]));
+        final Map<String, dynamic> map = (jsonDecode(await fixesFile.readAsString()))["fixes"];
+        final Map<String, String> fixes = map.cast();
+        print("Fixes list loaded");
+        processor.manualFixes.addAll(fixes);
     }
 
     final Map<String,String> files = processor.process(data);

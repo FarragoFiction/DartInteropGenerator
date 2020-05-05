@@ -19,6 +19,9 @@ class Module extends Component {
         final List<dynamic> content = input[4][1]; // between braces
         for (final dynamic object in content) {
             if (object is Component) {
+                if (object.name == "PostProcessOptions") {
+                    print(object);
+                }
                 components[object.name] = object;
             } else {
                 print("Module non-component: $object");

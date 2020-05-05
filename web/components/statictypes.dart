@@ -8,8 +8,7 @@ abstract class StaticTypes {
     static final ClassDef typeInt = new ClassDef()..name="int";
 
     static final ClassDef typeList = new ClassDef()..name="List";
-    static final ClassDef typeJsArray = new ClassDef()..name="JsArray";
-    static final ClassDef typeJsFunction = new ClassDef()..name="JsFunction";
+    static final ClassDef typeFunction = new ClassDef()..name="Function";
 
     static final TypeModifier typePartial = new TypeModifier()..name="Partial"..generics.add(new GenericRef()..name="T");
 
@@ -29,9 +28,9 @@ abstract class StaticTypes {
         "any": typeDynamic,
         "this": typeDynamic, // weird
         "unknown": typeDynamic,
-        "undefined": typeDynamic, // this one is weird
+        "undefined": typeVoid, // this one is weird
         "object": typeDynamic, // object literals
-        "Function": typeJsFunction,
+        "Function": typeFunction,
         "Promise": "Promise",
         "Error": "Error",
         "Event": "HTML.Event",
@@ -47,11 +46,15 @@ abstract class StaticTypes {
         "double": "double",
         "boolean": "bool",
         "Boolean": "bool",
+        "symbol": "Symbol",
+        "true": "bool",
+        "false": "bool",
+        "Object": "Object",
 
-        "Array": typeJsArray,
-        "ArrayLike": typeJsArray,
-        "ReadonlyArray": typeJsArray,
-        "Set": typeJsArray,
+        "Array": typeList,
+        "ArrayLike": typeList,
+        "ReadonlyArray": typeList,
+        "Set": typeList,
         "ClientRect": "Math.Rectangle<num>",
 
         // dart:typed_data
@@ -99,6 +102,7 @@ abstract class StaticTypes {
         "MediaStreamTrack": "HTML.MediaStreamTrack",
         "EventTarget": "HTML.EventTarget",
         "DOMPointReadOnly": "HTML.DomPointReadOnly",
+        "XMLHttpRequest": "HTML.HttpRequest",
 
         // dart:web_gl as WebGL
         "WebGLBuffer": "WebGL.Buffer",
@@ -187,6 +191,7 @@ abstract class ForbiddenNames {
         "return",
         "interface",
         "break",
+        "this",
     };
 
     static const Set<String> ignoredMembers = <String>{

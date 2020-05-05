@@ -21,6 +21,9 @@ class TypeUnionDef extends TypeDeclaration {
         final TypeRef ref = input[3];
         this.name = ref.name;
         this.generics.addAll(ref.generics);
+        for (final GenericRef ref in generics) {
+            ref.parentComponent = this;
+        }
         // 4 =
         // 5 some weird extra |
         // 6 list of types
@@ -33,6 +36,10 @@ class TypeUnionDef extends TypeDeclaration {
             print("TypeUnionDef non-type: ${input[6]} in $input");
         }
         // 7 semicolon
+
+        for (final TypeRef ref in unionTypes) {
+            ref.parentComponent = this;
+        }
     }
 
     @override
@@ -61,6 +68,8 @@ class TypeUnionDef extends TypeDeclaration {
 }
 
 class TypeThingy extends TypeDeclaration {
+    ConstrainedObject object;
+
     @override
     void processList(List<dynamic> input) {
         // 0 docs
@@ -71,8 +80,14 @@ class TypeThingy extends TypeDeclaration {
         final TypeRef ref = input[3];
         this.name = ref.name;
         this.generics.addAll(ref.generics);
+        for (final GenericRef ref in generics) {
+            ref.parentComponent = this;
+        }
         // 4 =
         // 5 closure
+        object = input[5];
+        print("THINGY: $object");
+        object.parentComponent = this;
         // 6 semicolon
     }
 
@@ -81,7 +96,14 @@ class TypeThingy extends TypeDeclaration {
         for (final GenericRef ref in generics) {
             ref.processTypeRefs(references);
         }
+        references.add(object);
     }
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        writer.writeLine("// THINGY ${getJsName()}");
+    }
+
 }
 
 class TypeModifier extends TypeDeclaration {
@@ -97,6 +119,9 @@ class TypeModifier extends TypeDeclaration {
         this.generics.addAll(ref.generics);
         if (generics.isEmpty) {
             print("Type modifier with no generics? ${this.name}");
+        }
+        for (final GenericRef ref in generics) {
+            ref.parentComponent = this;
         }
         // 4 =
         // 5 some clump of text

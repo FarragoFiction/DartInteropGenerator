@@ -29,6 +29,7 @@ class FunctionDeclaration extends Component with HasGenerics {
             for (final dynamic item in input[5][1]) {
                 if (item is Parameter) {
                     this.arguments.add(item);
+                    item.parentComponent = this;
                 } else {
                     print("Function non-parameter $item in ${input[5][1]} -> $input");
                 }
@@ -44,6 +45,9 @@ class FunctionDeclaration extends Component with HasGenerics {
             print("Method non-type returned: ${input[7]} in $input");
         }
         // 8 semicolon
+
+        this.type?.parentComponent = this;
+        checkForbiddenParameterNames(arguments);
     }
 
     @override
@@ -113,6 +117,14 @@ class FunctionDeclaration extends Component with HasGenerics {
 
         writer.write(");\n");
     }
+
+    static void checkForbiddenParameterNames(Iterable<Parameter> params) {
+        for (final Parameter param in params) {
+            if (ForbiddenNames.names.contains(param.getName())) {
+                param.altName = "${param.getName()}_js";
+            }
+        }
+    }
 }
 
 class Parameter extends Component {
@@ -140,6 +152,7 @@ class Parameter extends Component {
         // 3 type
         if (input[3] is TypeRef) {
             this.type = input[3];
+            this.type.parentComponent = this;
         } else {
             // a string...
         }
@@ -156,7 +169,7 @@ class Parameter extends Component {
         this.type.writeOutput(writer);
         writer
             ..write(" ")
-            ..write(this.getName());
+            ..write(this.getJsName());
 
         /*if(optional) {
             writer.write("/*?*/");
@@ -173,6 +186,7 @@ class GenericRef extends Component {
         // 0 type
         if (input[0] is TypeRef) {
             this.type = input[0];
+            this.type.parentComponent = this;
         } else if (input[0] is ArrayBrackets) {
             this.type = input[0].toType();
         } else {
@@ -180,7 +194,8 @@ class GenericRef extends Component {
         }
         // 1 optional
         // 2 extends type
-        if (input[2] != null) {
+        if ((input[2] != null) && (input[2][1] == null)) {
+            print(input[2]);
             this.extend = input[2][2];
         }
     }
@@ -200,5 +215,9 @@ class GenericRef extends Component {
     @override
     void writeOutput(OutputWriter writer) {
         this.type.writeOutput(writer);
+        if (this.extend != null) {
+            writer.write(" extends ");
+            this.extend.writeOutput(writer);
+        }
     }
 }

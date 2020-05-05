@@ -33,6 +33,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
             for (final dynamic item in data) {
                 if (item is TypeRef) {
                     ref.unionRefs.add(item);
+                    item.parentComponent = ref;
                 } else {
                     print("Union invalid TypeRef: $item in $data");
                 }
@@ -102,6 +103,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
             for(final dynamic item in items) {
                 if (item is GenericRef) {
                     ref.generics.add(item);
+                    item.parentComponent = ref;
                 } else {
                     print("Generic non-TypeRef: $item in ${data[1][1]} -> $data");
                 }
@@ -111,7 +113,7 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         return ref;
     }));
     @override
-    Parser<dynamic> arrayBrackets() => super.arrayBrackets().map(handleErrors((dynamic data) => new ArrayBrackets()));
+    Parser<dynamic> arrayBrackets() => super.arrayBrackets().map(handleErrors((dynamic data) => new ArrayBrackets()..count = 1));
     @override
     Parser<dynamic> arrayBracketsPlus() => super.arrayBracketsPlus().map(handleErrors((dynamic data) => new ArrayBrackets()..count = data.length));
     @override
@@ -121,7 +123,8 @@ class TSDParserDefinition extends TSDGrammarDefinition {
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
     
     @override
-    Parser<dynamic> lambdaDef() => super.lambdaDef().map(handleErrors((dynamic data) => new LambdaRef()..notes.add(data.toString()) )); //TODO: give lambdas a proper output
+    //Parser<dynamic> lambdaDef() => super.lambdaDef().map(handleErrors((dynamic data) => new LambdaRef()..notes.add(data.toString()) )); //TODO: give lambdas a proper output
+    Parser<dynamic> lambdaDef() => super.lambdaDef().map(process(() => new LambdaRef()));
     @override
     Parser<dynamic> lambdaArray() => super.lambdaArray().map(handleErrors((dynamic data) {
         // 0 (
@@ -135,7 +138,8 @@ class TSDParserDefinition extends TSDGrammarDefinition {
         return l;
     }));
     @override
-    Parser<dynamic> lambdaClosure() => super.lambdaClosure().map(handleErrors((dynamic data) => new LambdaRef()..notes.add("${data[1]} => ${data[3]}")));
+    //Parser<dynamic> lambdaClosure() => super.lambdaClosure().map(handleErrors((dynamic data) => new LambdaRef()..notes.add("${data[1]} => ${data[3]}")));
+    Parser<dynamic> lambdaClosure() => super.lambdaClosure().map(process(() => new LambdaRef()));
 
     // function stuff
     @override

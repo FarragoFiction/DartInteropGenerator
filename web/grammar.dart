@@ -219,7 +219,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     /// object with specific field types, including index query stuff...
     Parser<dynamic> constrainedObject() =>
         ref(token, "{") &
-        (ref(arrayAccess) | ref(constrainedObjectLine) | ref(objectKeyDefinition)| ref(field) | ref(method) ).star() &
+        (ref(arrayAccess) | ref(field) | ref(method) | ref(constrainedObjectLine) | ref(objectKeyDefinition)).star() &
         ref(token, "}");
     /// a line inside a constrained object?
     Parser<dynamic> constrainedObjectLine() =>
@@ -267,7 +267,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref(classContent).star() &
         ref(token, "}");
     /// stuff that can go inside a class
-    Parser<dynamic> classContent() => ref(constructor) | ref(getter) | ref(setter) | ref(field) | ref(method) | ref(arrayAccess) | ref(DOC_COMMENT); // make sure comment goes last
+    Parser<dynamic> classContent() => ref(constructor) | ref(field) | ref(method) | ref(getter) | ref(setter) | ref(arrayAccess) | ref(DOC_COMMENT); // make sure comment goes last
     /// class constructor
     Parser<dynamic> constructor() => ref(DOC_COMMENT).optional() & ref(PRIVATE).optional() & ref(CONSTRUCTOR) & ref(functionArguments) & ref(token, ";");
 

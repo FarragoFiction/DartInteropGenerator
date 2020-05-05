@@ -52,10 +52,14 @@ class Field extends Member {
                 print("Field non-type: ${input[7][1]} in ${input[7]} -> $input");
             }
         }
+        this.type?.parentComponent = this;
     }
 
     @override
-    void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
+    void getTypeRefs(Set<TypeRef> references) {
+        if (this.getJsName().startsWith("_")) { return; }
+        this.type?.processTypeRefs(references);
+    }
 
     @override
     String displayString() => "${super.displayString()}${type == null ? "" : ": $type"}";
@@ -149,6 +153,7 @@ class Method extends Member with HasGenerics {
             for (final dynamic item in input[8][1]) {
                 if (item is Parameter) {
                     this.arguments.add(item);
+                    item.parentComponent = this;
                 } else {
                     print("Function non-parameter $item in ${input[8][1]} -> $input");
                 }
@@ -173,10 +178,13 @@ class Method extends Member with HasGenerics {
             HasGenerics.setGenerics(this, this, arg.type);
         }
         HasGenerics.setGenerics(this, this, this.type);
+        this.type?.parentComponent = this;
+        FunctionDeclaration.checkForbiddenParameterNames(arguments);
     }
 
     @override
     void getTypeRefs(Set<TypeRef> references) {
+        if (this.getJsName().startsWith("_")) { return; }
         for (final GenericRef ref in generics) {
             ref.processTypeRefs(references);
         }
@@ -254,6 +262,16 @@ class Method extends Member with HasGenerics {
 
         writer.write(");\n");
     }
+
+    LambdaRef toLambda() => new LambdaRef()
+        ..name = name
+        ..returnType = type
+        ..generics.addAll(generics)
+        ..altName = altName
+        ..docs = docs
+        ..notes.addAll(notes)
+        ..arguments.addAll(arguments)
+    ;
 }
 
 abstract class GetterSetter {}
@@ -288,10 +306,15 @@ class Getter extends Member implements GetterSetter {
             }
         }
         // 8 semicolon
+
+        this.type?.parentComponent = this;
     }
 
     @override
-    void getTypeRefs(Set<TypeRef> references) { this.type?.processTypeRefs(references); }
+    void getTypeRefs(Set<TypeRef> references) {
+        if (this.getJsName().startsWith("_")) { return; }
+        this.type?.processTypeRefs(references);
+    }
 
     @override
     void writeOutput(OutputWriter writer) {
@@ -337,12 +360,19 @@ class Setter extends Member implements GetterSetter {
         // 6 (
         // 7 arg
         this.argument = input[7];
+        this.argument.parentComponent = this;
+        //ConstrainedObject.markImportant(argument.type);
         // 8 )
         // 9 semicolon
+
+        this.argument?.parentComponent = this;
     }
 
     @override
-    void getTypeRefs(Set<TypeRef> references) { this.argument?.processTypeRefs(references); }
+    void getTypeRefs(Set<TypeRef> references) {
+        if (this.getJsName().startsWith("_")) { return; }
+        this.argument?.processTypeRefs(references);
+    }
 
     @override
     void writeOutput(OutputWriter writer) {
@@ -383,6 +413,7 @@ class Constructor extends Component {
             for (final dynamic item in input[3][1]) {
                 if (item is Parameter) {
                     this.arguments.add(item);
+                    item.parentComponent = this;
                 } else {
                     print("Constructor non-parameter $item in ${input[3][1]} -> $input");
                 }
@@ -400,6 +431,7 @@ class Constructor extends Component {
 
     @override
     void writeOutput(OutputWriter writer) {
+        final TypeDef owner = parentComponent;
         final ClassDef parent = owner.parentClass;
 
         // wish I didn't have to ignore this but then I also wish the actual null operator *worked*
@@ -410,7 +442,7 @@ class Constructor extends Component {
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
             ..writeIndented("external ")
-            ..write(owner.getName())
+            ..write(parentComponent.getName())
             ..write("(")
         ;
 
@@ -444,7 +476,7 @@ class Constructor extends Component {
 
         writer
             ..writeIndented("external ")
-            ..write(owner.getName())
+            ..write(parentComponent.getName())
             ..write("._js()")
         ;
 

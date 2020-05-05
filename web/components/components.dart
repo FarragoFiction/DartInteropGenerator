@@ -13,7 +13,7 @@ export "typedeclaration.dart";
 export "variable.dart";
 
 abstract class Component {
-    TypeDef owner;
+    Component parentComponent;
     String name;
     String altName;
     List<String> docs;
@@ -101,8 +101,8 @@ mixin HasGenerics on Component {
             }
         }
 
-        if (parent.owner != null) {
-            setGenerics(parent.owner, parent.owner, checkType);
+        if (parent.parentComponent != null) {
+            setGenerics(parent.parentComponent, parent.parentComponent, checkType);
         }
     }
 }

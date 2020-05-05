@@ -33,6 +33,9 @@ class TypeDef extends Component with HasGenerics{
         for (final Member ref in members) {
             ref.processTypeRefs(references);
         }
+        for (final GenericRef ref in generics) {
+            ref.processTypeRefs(references);
+        }
     }
 
     @override
@@ -182,15 +185,18 @@ class ClassDef extends TypeDef {
         this.generics.addAll(input[4].generics);
         for (final GenericRef ref in generics) {
             ref.type.genericOf = this;
+            ref.parentComponent = this;
         }
         // 5 extends
         if (input[5] != null) {
             this.inherits.add(input[5][1]);
+            input[5][1].parentComponent = this;
         }
         // 6 implements
         if (input[6] != null) {
             for (final dynamic item in input[6][1]) {
                 this.inherits.add(item);
+                item.parentComponent = this;
             }
         }
         // 7 open brace
@@ -198,10 +204,10 @@ class ClassDef extends TypeDef {
         for(final dynamic item in input[8]) {
             if (item is Constructor) {
                 this.constructor = item;
-                item.owner = this;
+                item.parentComponent = this;
             } else if (item is Member) {
                 this.members.add(item);
-                item.owner = this;
+                item.parentComponent = this;
             } else if (item is List<String>) {
                 // stray comment, discard unfortunately
             } else {
@@ -243,6 +249,8 @@ class ClassDef extends TypeDef {
 }
 
 class InterfaceDef extends TypeDef {
+    bool isObjectTemplate = false;
+
     InterfaceDef() { this.isAbstract = true; }
 
     @override
@@ -257,17 +265,19 @@ class InterfaceDef extends TypeDef {
         this.generics.addAll(input[3].generics);
         for (final GenericRef ref in generics) {
             ref.type.genericOf = this;
+            ref.parentComponent = this;
         }
         // 4 extends
         if (input[4] != null) {
             this.inherits.add(input[4][1]);
+            input[4][1].parentComponent = this;
         }
         // 5 open brace
         // 6 entries
         for(final dynamic item in input[6]) {
             if (item is Member) {
                 this.members.add(item);
-                item.owner = this;
+                item.parentComponent = this;
             } else if (item is List<String>) {
                 // stray comment, discard unfortunately
             } else {
@@ -281,6 +291,24 @@ class InterfaceDef extends TypeDef {
 
     @override
     String writeType() => "abstract class";
+
+    @override
+    void writeOutput(OutputWriter writer) {
+        if (isObjectTemplate) {
+            ConstrainedObject.writeObjectTemplateClass(
+                writer,
+                this.getJsName(),
+                new Map<String, Field>.fromIterable(fields, key: (dynamic f) => f.getJsName()),
+                process: (Field c) => c.type,
+                name: name,
+                generics: generics,
+                docs: docs,
+                notes: notes
+            );
+        } else {
+            super.writeOutput(writer);
+        }
+    }
 
     @override
     void writeContents(OutputWriter writer) {
