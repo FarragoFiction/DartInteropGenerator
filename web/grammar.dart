@@ -71,7 +71,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> DOC_COMMENT() =>
         ref(token, "/**") &
         any().starLazy(ref(token, "*/")).flatten().map((String input) {
-            return input.split(NEWLINE()).where((String s) => !s.isEmpty).map((String line) {
+            return input.split(NEWLINE().toPattern()).where((String s) => !s.isEmpty).map((String line) {
                 String trimmed = line.trim();
                 if (trimmed.startsWith("*")) {
                     trimmed = trimmed.substring(1).trim();
@@ -359,7 +359,8 @@ class TSDGrammarDefinition extends GrammarDefinition {
                 return input.trim(ref(WHITESPACE));
             }
         } else if (input is String) {
-            return token(input.length == 1 ? char(input) : string(input));
+            //return token(input.length == 1 ? char(input) : string(input));
+            return token(input.toParser());
         } else if (input is Function) {
             return token(ref(input));
         }

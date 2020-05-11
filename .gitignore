@@ -20,4 +20,3 @@ web/manifest/manifest.txt
 
 # ignore our output folder
 web/outputs/
-web/testpage/

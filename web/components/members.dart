@@ -441,7 +441,7 @@ class Constructor extends Component {
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
-            ..writeIndented("external ")
+            ..writeIndented("external factory ")
             ..write(parentComponent.getName())
             ..write("(")
         ;
@@ -468,13 +468,13 @@ class Constructor extends Component {
         }
 
         writer.write(")");
-        if (parentConstructor != null) {
+        /*if (parentConstructor != null) {
             writer.write(":super._js()");
-        }
+        }*/
         writer.write(";\n");
 
 
-        writer
+        /*writer
             ..writeIndented("external ")
             ..write(parentComponent.getName())
             ..write("._js()")
@@ -483,7 +483,7 @@ class Constructor extends Component {
         if (parentConstructor != null) {
             writer.write(":super._js()");
         }
-        writer.write(";\n");
+        writer.write(";\n");*/
     }
 
     static void writeBlankConstructor(TypeDef clazz, OutputWriter writer) {
@@ -494,14 +494,14 @@ class Constructor extends Component {
         final Constructor parentConstructor = parent == null ? null : parent.constructor;
 
         writer
-            ..writeIndented("external ")
+            ..writeIndented("external factory ")
             ..write(clazz.getName())
             ..write("()")
         ;
 
-        if (parentConstructor != null) {
+        /*if (parentConstructor != null) {
             writer.write(":super._js()");
-        }
+        }*/
         writer.write(";\n");
     }
 }

@@ -311,11 +311,15 @@ class Processor {
 
         for (final TypeDef type in tsd.allTypes()) {
             if (type.isAbstract) { continue; } // don't care about implementing if we're abstract
-            for (final TypeDef ancestor in type.ancestors) {
-                if (!ancestor.isAbstract) { continue; } // and we only care about implementing if the ancestor IS abstract
 
-                final Map<String, Member> toImplement = <String, Member>{};
+            final Map<String, Member> toImplement = <String, Member>{};
 
+            /*for (final TypeDef ancestor in type.ancestors) {
+                if (!ancestor.isAbstract) {
+                    continue;
+                } // and we only care about implementing if the ancestor IS abstract
+
+                //final Map<String, Member> toImplement = <String, Member>{};
                 visit(ancestor, (TypeDef def) => def.ancestors, (TypeDef def) {
                     for (final Member dMember in def.members) {
                         bool found = false;
@@ -341,52 +345,87 @@ class Processor {
 
                     return true;
                 });
+            }*/
 
-                for (final Member member in toImplement.values) {
-                    // if the thing we need to implement *is* implemented in a concrete parent, then skip it
-                    bool foundInAncestorClass = false;
-                    for (final TypeDef ancestor in type.ancestors) {
-                        if (ancestor.isAbstract) { continue; }
-                        for (final Member m in ancestor.members) {
-                            if (member.getName() == m.getName()) {
-                                foundInAncestorClass = true;
+            visit(type, (TypeDef def) => def.ancestors, (TypeDef def) {
+
+                for (final TypeRef iRef in def.implement) {
+                    final TypeDef iDef = iRef.type;
+                    if (!iDef.isAbstract) {
+                        continue;
+                    }
+                    final List<Member> checkMembers = <Member>[...type.members, ...def.members];
+                    for (final Member dMember in iDef.members) {
+                        bool found = false;
+                        for (final Member member in checkMembers) {
+                            if (dMember.getName() == member.getName()) {
+                                // force implementation of setters in classes where the abstract isn't readonly
+                                if (dMember is Field && member is Field) {
+                                    if (!dMember.readonly) {
+                                        member.readonly = false;
+                                    }
+                                }
+
+                                found = true;
                                 break;
                             }
                         }
+                        if (!found) {
+                            if (!toImplement.containsKey(dMember.getName())) {
+                                toImplement[dMember.getName()] = dMember;
+                            }
+                        }
                     }
-                    if (foundInAncestorClass) {
-                        continue;
-                    }
+                }
 
-                    // if it isn't implemented in a concrete ancestor, then do something about that
-                    if (member is Field) {
-                        final Set<Member> toRemove = <Member>{};
-                        for (final GetterSetter gs in type.members.whereType()) {
-                            if (gs is Getter) {
-                                if (gs.getName() == "${member.getName()}_getter") {
-                                    toRemove.add(gs);
-                                }
-                            } else if (gs is Setter) {
-                                if (gs.getName() == "${member.getName()}_setter") {
-                                    toRemove.add(gs);
-                                }
-                            }
+                return true;
+            });
+
+            // implement what we need to implement
+            for (final Member member in toImplement.values) {
+                // if the thing we need to implement *is* implemented in a concrete parent, then skip it
+                bool foundInAncestorClass = false;
+                for (final TypeDef ancestor in type.ancestors) {
+                    if (ancestor.isAbstract) { continue; }
+                    for (final Member m in ancestor.members) {
+                        if (member.getName() == m.getName()) {
+                            foundInAncestorClass = true;
+                            break;
                         }
-                        type.members.removeAll(toRemove);
-                        type.members.add(member);
-                    } else if (member is GetterSetter) {
-                        final Set<Member> toAdd = <Member>{};
-                        for (final Field field in type.members.whereType()) {
-                            if (field.name == member.getName().substring(0, member.getName().length-7)) {
-                                // do nothing as we already have a matching field
-                            } else {
-                                toAdd.add(member);
-                            }
-                        }
-                        type.members.addAll(toAdd);
-                    } else {
-                        type.members.add(member);
                     }
+                }
+                if (foundInAncestorClass) {
+                    continue;
+                }
+
+                // if it it's implemented in an abstract ancestor, then do something about that
+                if (member is Field) {
+                    final Set<Member> toRemove = <Member>{};
+                    for (final GetterSetter gs in type.members.whereType()) {
+                        if (gs is Getter) {
+                            if (gs.getName() == "${member.getName()}_getter") {
+                                toRemove.add(gs);
+                            }
+                        } else if (gs is Setter) {
+                            if (gs.getName() == "${member.getName()}_setter") {
+                                toRemove.add(gs);
+                            }
+                        }
+                    }
+                    type.members.removeAll(toRemove);
+                    type.members.add(member);
+                } else if (member is GetterSetter) {
+                    final Set<Member> toAdd = <Member>{};
+                    for (final Field field in type.members.whereType()) {
+                        if (field.name == member.getName().substring(0, member.getName().length-7)) {
+                            // do nothing as we already have a matching field
+                        } else {
+                            toAdd.add(member);
+                        }
+                    }
+                    type.members.addAll(toAdd);
+                } else {
+                    type.members.add(member);
                 }
             }
         }
