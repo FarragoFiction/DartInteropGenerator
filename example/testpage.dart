@@ -12,6 +12,17 @@ Future<void> main() async {
     final B.Scene scene = await createScene(engine, canvas);
 
     engine.runRenderLoop(js.allowInterop(() { scene.render(); }));
+
+    B.Promise<String> promise = new B.Promise<String>(js.allowInterop((void Function(String value) accept, void Function(dynamic reason) reject) {
+        new Future<void>.delayed(const Duration(seconds: 3), () => accept("hello"));
+    }));
+
+    Future<String> s = jsu.promiseToFuture(promise).then((dynamic string) {
+
+        print("future: $string");
+
+        return string;
+    });
 }
 
 Future<B.Scene> createScene(B.Engine engine, CanvasElement canvas) async {
