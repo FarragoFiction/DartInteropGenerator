@@ -228,9 +228,10 @@ class ClassDef extends TypeDef {
     @override
     void merge(Component otherComponent) {
         super.merge(otherComponent);
-        final ClassDef c = otherComponent;
-        if (this.constructor == null && c.constructor != null) {
-            this.constructor = c.constructor;
+        if (otherComponent is ClassDef) {
+            if (this.constructor == null && otherComponent.constructor != null) {
+                this.constructor = otherComponent.constructor;
+            }
         }
     }
 

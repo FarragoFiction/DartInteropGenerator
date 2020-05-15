@@ -111,6 +111,9 @@ class Module extends Component {
                     if (thisComp is ClassDef) {
                         // no-op, we take precedence already
                         //print("interface ignored with class: $compName");
+
+                        // actually, turns out we probably need to do this
+                        thisComp.merge(thatComp);
                     } else if (thisComp is InterfaceDef) {
                         // interface merger
                         //print("interface conflict: $compName");
