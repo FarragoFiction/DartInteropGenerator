@@ -10,6 +10,7 @@ class Processor {
     final Set<String> jsClasses = <String>{};
 
     final Map<String, String> manualFixes = <String,String>{};
+    final Map<String, String> replacementClasses = <String,String>{};
 
     Processor() {
         presetTypes.addAll(StaticTypes.mapping);
@@ -75,7 +76,12 @@ class Processor {
             if (ref is ConstrainedObject) {
                 inlineObjects.add(ref);
             } else if (ref.type == null) {
-                final String name = ref.getName();
+                String name = ref.getName();
+                // do replacement classes in stuff
+                if (replacementClasses.containsKey(name)) {
+                    //print("Replaced $name with ${replacementClasses[name]}");
+                    name = replacementClasses[name];
+                }
                 if (typeMap.containsKey(name)) {
                     ref.type = typeMap[name];
                 } else if (ref.genericOf == null) {
@@ -83,6 +89,23 @@ class Processor {
                     // if it's not a generic, stick it in the unresolved list
                     unresolved.add(name);
                 }
+            }/* else if (ref.type != null) {
+                // replace blacklisted classes in refs with a type
+                if (replacementClasses.containsKey(ref.type.getName())) {
+                    final String replacementName = replacementClasses[ref.type.getName()];
+                    if (typeMap.containsKey(replacementName)) {
+                        final TypeDef r = typeMap[replacementName];
+                        print("Replaced ${ref.type.getName()} with ${r.getName()}");
+                        ref.type = r;
+                    }
+                }
+            }*/
+        }
+
+        // blacklist replaced classes from printing to file
+        for (final TypeDef t in typeDefs) {
+            if (replacementClasses.containsKey(t.getName())) {
+                t.shouldWriteToFile = false;
             }
         }
 
@@ -117,7 +140,8 @@ class Processor {
     }
 
     void fixInheritance(TSDFile tsd, Set<ConstrainedObject> inlinedObjects) {
-        // set up inheritance relationships
+        // ################################################## set up inheritance relationships ##################################################
+
         for (final TypeDef type in tsd.allTypes()) {
             for(final TypeRef inheritRef in type.inherits) {
                 if (inheritRef.type == null || !(inheritRef.type is ClassDef || inheritRef.type is InterfaceDef)) {

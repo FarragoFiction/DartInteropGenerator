@@ -46,10 +46,14 @@ Future<void> main(List<String> arguments) async {
 
     if (argResults[fixesArg] != null) {
         final File fixesFile = new File(Path.join(programPath, argResults[fixesArg]));
-        final Map<String, dynamic> map = (jsonDecode(await fixesFile.readAsString()))["fixes"];
-        final Map<String, String> fixes = map.cast();
+        final Map<String,dynamic> json = jsonDecode(await fixesFile.readAsString());
+        final Map<String, dynamic> fixMap = json["fixes"];
+        final Map<String, String> fixes = fixMap.cast();
+        final Map<String, dynamic> replaceMap = json["classReplacements"];
+        final Map<String, String> replacements = replaceMap.cast();
         print("Fixes list loaded");
         processor.manualFixes.addAll(fixes);
+        processor.replacementClasses.addAll(replacements);
     }
 
     final Map<String,String> files = processor.process(data);

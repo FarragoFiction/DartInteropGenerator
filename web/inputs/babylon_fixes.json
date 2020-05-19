@@ -22,7 +22,6 @@
     "external WebGL.VertexArrayObject recordVertexArrayObject(dynamic /* object */ vertexBuffers, NativeDataBuffer indexBuffer, Effect effect);" : "external WebGL.VertexArrayObject recordVertexArrayObject(dynamic vertexBuffers, DataBuffer indexBuffer, Effect effect);",
     "external dynamic createRawShaderProgram(IPipelineContext pipelineContext, String vertexCode, String fragmentCode, [WebGL.RenderingContext context, List<String> transformFeedbackVaryings]);" : "external WebGL.Program createRawShaderProgram(IPipelineContext pipelineContext, String vertexCode, String fragmentCode, [WebGL.RenderingContext context, List<String> transformFeedbackVaryings]);",
     "external dynamic createShaderProgram(IPipelineContext pipelineContext, String vertexCode, String fragmentCode, String defines, [WebGL.RenderingContext context, List<String> transformFeedbackVaryings]);" : "external WebGL.Program createShaderProgram(IPipelineContext pipelineContext, String vertexCode, String fragmentCode, String defines, [WebGL.RenderingContext context, List<String> transformFeedbackVaryings]);",
-    "external void setViewport(Viewport viewport, [num requiredWidth, num requiredHeight]);" : "external void setViewport(IViewportLike viewport, [num requiredWidth, num requiredHeight]);",
     "external bool isReadyForSubMesh(AbstractMesh mesh, SubMesh subMesh, [bool useInstances]);" : "external bool isReadyForSubMesh(AbstractMesh mesh, BaseSubMesh subMesh, [bool useInstances]);",
     "external TrailMesh clone([String name, TransformNode newGenerator, bool doNotCloneChildren, bool clonePhysicsImpostor]);" : "external TrailMesh clone([String name, Node newGenerator, bool doNotCloneChildren, bool clonePhysicsImpostor]);",
     "external set lockedTarget(AbstractMesh value);" : "external set lockedTarget(dynamic value);",
@@ -51,5 +50,16 @@
 
     "/// The list of defines used in the shader\n\texternal List<String> get defines;\n\texternal set defines( List<String> value );\n}" : "/// The list of defines used in the shader\n\texternal List<String> get defines;\n\texternal set defines( List<String> value );\n\n    /// Used to index Effect.ShaderStore, \"custom\" -> Effect.ShaderStore[\"customVertexShader\"]\n    external String get vertex;\n    external set vertex( String value );\n\n    /// Used to index Effect.ShaderStore, \"custom\" -> Effect.ShaderStore[\"customFragmentShader\"]\n    external String get fragment;\n    external set fragment( String value );\n\n    /// Element to take vertex shader code from\n    external HTML.Element get vertexElement;\n    external set vertexElement( HTML.Element value );\n\n    /// Element to take fragment shader code from\n    external HTML.Element get fragmentElement;\n    external set fragmentElement( HTML.Element value );\n\n    /// Vertex shader source code as a string\n    external String get vertexSource;\n    external set vertexSource( String value );\n\n    /// Fragment shader source code as a string\n    external String get fragmentSource;\n    external set fragmentSource( String value );\n}",
     "external factory IShaderMaterialOptions({bool needAlphaBlending, bool needAlphaTesting, List<String> attributes, List<String> uniforms, List<String> uniformBuffers, List<String> samplers, List<String> defines});" : "external factory IShaderMaterialOptions({bool needAlphaBlending, bool needAlphaTesting, List<String> attributes, List<String> uniforms, List<String> uniformBuffers, List<String> samplers, List<String> defines, String vertex, String fragment, HTML.Element vertexElement, HTML.Element fragmentElement, String vertexSource, String fragmentSource});"
+  },
+
+  "classReplacements" : {
+    "IMatrixLike" : "Matrix",
+    "IColor3Like": "Color3",
+    "IColor4Like": "Color4",
+    "IVector2Like": "Vector2",
+    "IVector3Like": "Vector3",
+    "IVector4Like": "Vector4",
+    "IViewportLike": "Viewport",
+    "IPlaneLike": "Plane"
   }
 }

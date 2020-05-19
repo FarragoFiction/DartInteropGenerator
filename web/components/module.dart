@@ -81,7 +81,7 @@ class Module extends Component {
 
         for (final Component component in components.values) {
             if (component == null) { continue; }
-            if (component.getName().startsWith("_")) { continue; }
+            if ((!component.shouldWriteToFile) || component.getName().startsWith("_")) { continue; }
             component.writeOutput(writer);
         }
     }
