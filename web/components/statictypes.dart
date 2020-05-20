@@ -195,6 +195,6 @@ abstract class ForbiddenNames {
     };
 
     static const Set<String> ignoredMembers = <String>{
-        "toString",
+        //"toString",
     };
 }

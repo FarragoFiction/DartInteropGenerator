@@ -1,6 +1,7 @@
 {
   "fixes" : {
-    "class Stage<T extends Function> extends List<StageObject> {" : "class Stage<T extends Function> extends JsArray<StageObject<T>> {",
+    "class Stage<T extends Function> extends List<StageObject> {" : "class Stage<T extends Function> {",
+    "abstract class BaseError extends Error {" : "abstract class BaseError {",
 
     "external void setArray(WebGL.UniformLocation uniform, dynamic array);" : "external void setArray(WebGL.UniformLocation uniform, List<num> array);",
     "external void setArray2(WebGL.UniformLocation uniform, dynamic array);" : "external void setArray2(WebGL.UniformLocation uniform, List<num> array);",
