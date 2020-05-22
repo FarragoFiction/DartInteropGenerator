@@ -21,8 +21,8 @@ Future<void> main(List<String> arguments) async {
 
     final ArgResults argResults = parser.parse(arguments);
 
-    final RegExp commentStripper = new RegExp(r"(:)?\/\/.*");
-    final RegExp commentStripper2 = new RegExp(r"\/\*[^\*]*\*\/");
+    final RegExp commentStripper = new RegExp(r"(:)?//.*");
+    final RegExp commentStripper2 = new RegExp(r"/\*[^*]*\*/");
 
     final String programPath = Path.dirname(Platform.script.toFilePath());
 
@@ -35,6 +35,7 @@ Future<void> main(List<String> arguments) async {
     }).replaceAll(commentStripper2,"");
 
     final Processor processor = new Processor();
+    final Set<String> extraImports = <String>{};
 
     if (argResults[jsArg] != null) {
         final File jsFile = new File(Path.join(programPath, argResults[jsArg]));
@@ -54,9 +55,11 @@ Future<void> main(List<String> arguments) async {
         print("Fixes list loaded");
         processor.manualFixes.addAll(fixes);
         processor.replacementClasses.addAll(replacements);
+        final List<dynamic> imports = json["extraImports"];
+        extraImports.addAll(imports.cast());
     }
 
-    final Map<String,String> files = processor.process(data);
+    final Map<String,String> files = processor.process(data, extraImports);
 
     final String outputPath = Path.join(programPath, argResults[outputArg]);
 

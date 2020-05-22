@@ -16,7 +16,7 @@ class Processor {
         presetTypes.addAll(StaticTypes.mapping);
     }
 
-    Map<String,String> process(String input) {
+    Map<String,String> process(String input, Iterable<String> extraImports) {
         // ################################################## PARSE ##################################################
 
         final GrammarParser processor = new TSDParser();
@@ -128,7 +128,7 @@ class Processor {
         // ################################################## WRITE ##################################################
 
         // write all the outputs and hand them back
-        final Map<String,String> outputs = write(tsd);
+        final Map<String,String> outputs = write(tsd, extraImports);
 
         print("${new DateTime.now().difference(startTime)}: Applying manual fixes");
 
@@ -455,9 +455,9 @@ class Processor {
         }
     }
 
-    Map<String,String> write(TSDFile tsd) {
+    Map<String,String> write(TSDFile tsd, Iterable<String> extraImports) {
         final Map<String, String> outputs = <String,String>{};
-        final List<String> importNames = <String>["promise"];
+        final List<String> importNames = <String>["promise", ...extraImports];
 
         for (final Module module in tsd.modules.values) {
             importNames.add(module.getFileName());

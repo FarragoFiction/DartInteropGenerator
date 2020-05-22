@@ -47,10 +47,7 @@
     "class TextureAssetTask extends AbstractAssetTask" : "class TextureAssetTask extends AbstractAssetTask<TextureAssetTask>",
     "class CubeTextureAssetTask extends AbstractAssetTask" : "class CubeTextureAssetTask extends AbstractAssetTask<CubeTextureAssetTask>",
     "class HDRCubeTextureAssetTask extends AbstractAssetTask" : "class HDRCubeTextureAssetTask extends AbstractAssetTask<HDRCubeTextureAssetTask>",
-    "class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask" : "class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask<EquiRectangularCubeTextureAssetTask>",
-
-    "/// The list of defines used in the shader\n\texternal List<String> get defines;\n\texternal set defines( List<String> value );\n}" : "/// The list of defines used in the shader\n\texternal List<String> get defines;\n\texternal set defines( List<String> value );\n\n    /// Used to index Effect.ShaderStore, \"custom\" -> Effect.ShaderStore[\"customVertexShader\"]\n    external String get vertex;\n    external set vertex( String value );\n\n    /// Used to index Effect.ShaderStore, \"custom\" -> Effect.ShaderStore[\"customFragmentShader\"]\n    external String get fragment;\n    external set fragment( String value );\n\n    /// Element to take vertex shader code from\n    external HTML.Element get vertexElement;\n    external set vertexElement( HTML.Element value );\n\n    /// Element to take fragment shader code from\n    external HTML.Element get fragmentElement;\n    external set fragmentElement( HTML.Element value );\n\n    /// Vertex shader source code as a string\n    external String get vertexSource;\n    external set vertexSource( String value );\n\n    /// Fragment shader source code as a string\n    external String get fragmentSource;\n    external set fragmentSource( String value );\n}",
-    "external factory IShaderMaterialOptions({bool needAlphaBlending, bool needAlphaTesting, List<String> attributes, List<String> uniforms, List<String> uniformBuffers, List<String> samplers, List<String> defines});" : "external factory IShaderMaterialOptions({bool needAlphaBlending, bool needAlphaTesting, List<String> attributes, List<String> uniforms, List<String> uniformBuffers, List<String> samplers, List<String> defines, String vertex, String fragment, HTML.Element vertexElement, HTML.Element fragmentElement, String vertexSource, String fragmentSource});"
+    "class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask" : "class EquiRectangularCubeTextureAssetTask extends AbstractAssetTask<EquiRectangularCubeTextureAssetTask>"
   },
 
   "classReplacements" : {
@@ -62,5 +59,9 @@
     "IVector4Like": "Vector4",
     "IViewportLike": "Viewport",
     "IPlaneLike": "Plane"
-  }
+  },
+
+  "extraImports" : [
+    "babylon_extensions"
+  ]
 }
