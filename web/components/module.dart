@@ -99,8 +99,9 @@ class Module extends Component {
 
                 if (thatComp is ClassDef) {
                     if (thisComp is InterfaceDef) {
-                        // if we have an interface and the other one has a class, overwrite
+                        // if we have an interface and the other one has a class, overwrite and merge in the interface
                         this.components[compName] = thatComp;
+                        thatComp.merge(thisComp);
                         //print("class replaces interface $compName");
                     } else if (thisComp is ClassDef) {
                         // conflicting classes
