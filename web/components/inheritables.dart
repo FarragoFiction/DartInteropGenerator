@@ -3,18 +3,18 @@ import "components.dart";
 class TypeDef extends Component with HasGenerics{
     bool isAbstract = false;
     final Set<TypeRef> inherits = <TypeRef>{};
-    Iterable<TypeRef> extend;
-    Iterable<TypeRef> implement;
+    late Iterable<TypeRef> extend;
+    late Iterable<TypeRef> implement;
 
     final Set<TypeDef> ancestors = <TypeDef>{};
     final Set<TypeDef> descendants = <TypeDef>{};
 
     //final Set<GenericRef> generics = <GenericRef>{};
     final Set<Member> members = <Member>{};
-    Iterable<Method> methods;
-    Iterable<Field> fields;
+    late Iterable<Method> methods;
+    late Iterable<Field> fields;
 
-    TypeDef get parentClass => extend.isEmpty ? null : extend.first.type;
+    TypeDef? get parentClass => extend.isEmpty ? null : extend.first.type;
 
     TypeDef() {
         extend = inherits.where((TypeRef ref) => ref.type != null && ref.type is ClassDef);
@@ -120,7 +120,7 @@ class TypeDef extends Component with HasGenerics{
         if (name != safeName) {
             writer
                 ..write('"')
-                ..write(name)
+                ..write(name!)
                 ..write('"');
         }
         writer
@@ -169,7 +169,7 @@ class TypeDef extends Component with HasGenerics{
 }
 
 class ClassDef extends TypeDef {
-    Constructor constructor;
+    Constructor? constructor;
 
     @override
     void processList(List<dynamic> input) {
@@ -184,7 +184,7 @@ class ClassDef extends TypeDef {
         this.name = input[4].name;
         this.generics.addAll(input[4].generics);
         for (final GenericRef ref in generics) {
-            ref.type.genericOf = this;
+            ref.type?.genericOf = this;
             ref.parentComponent = this;
         }
         // 5 extends
@@ -240,7 +240,7 @@ class ClassDef extends TypeDef {
         if (this.constructor == null) {
             Constructor.writeBlankConstructor(this, writer);
         } else {
-            this.constructor.writeOutput(writer);
+            this.constructor!.writeOutput(writer);
         }
         super.writeContents(writer);
     }
@@ -265,7 +265,7 @@ class InterfaceDef extends TypeDef {
         this.name = input[3].name;
         this.generics.addAll(input[3].generics);
         for (final GenericRef ref in generics) {
-            ref.type.genericOf = this;
+            ref.type?.genericOf = this;
             ref.parentComponent = this;
         }
         // 4 extends
@@ -300,7 +300,7 @@ class InterfaceDef extends TypeDef {
                 writer,
                 this.getJsName(),
                 new Map<String, Field>.fromIterable(fields, key: (dynamic f) => f.getJsName()),
-                process: (Field c) => c.type,
+                process: (Field c) => c.type!,
                 name: name,
                 generics: generics,
                 docs: docs,

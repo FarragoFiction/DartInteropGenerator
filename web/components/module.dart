@@ -22,7 +22,7 @@ class Module extends Component {
                 if (object.name == "PostProcessOptions") {
                     print(object);
                 }
-                components[object.name] = object;
+                components[object.name!] = object;
             } else {
                 print("Module non-component: $object");
             }
@@ -30,12 +30,12 @@ class Module extends Component {
     }
 
     @override
-    void processTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) { getTypeRefs(references, exclusions); }
+    void processTypeRefs(Set<TypeRef> references, [Set<String>? exclusions]) { getTypeRefs(references, exclusions); }
 
     @override
-    void getTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) {
+    void getTypeRefs(Set<TypeRef> references, [Set<String>? exclusions]) {
         for (final Component c in components.values) {
-            if (!exclusions.contains(c.getName())) {
+            if (exclusions != null && !exclusions.contains(c.getName())) {
                 c.processTypeRefs(references);
             }/* else {
                 print("Excluding ${c.runtimeType} ${c.getName()} as it is a js class");
@@ -46,10 +46,10 @@ class Module extends Component {
     @override
     String toString() => "${super.toString()}:$components";
 
-    String getFileName() => name.toLowerCase().replaceAll(".", "_");
+    String getFileName() => name!.toLowerCase().replaceAll(".", "_");
 
     @override
-    void writeOutput(OutputWriter writer, [List<String> importNames]) {
+    void writeOutput(OutputWriter writer, [List<String>? importNames]) {
         writer
             ..writeLine('@JS("$name")')
             ..writeLine('library $name;')
@@ -73,14 +73,14 @@ class Module extends Component {
         }
 
         writer.writeLine();
-        final TSDFile parent = this.parentComponent;
+        final TSDFile parent = this.parentComponent! as TSDFile;
         if (!parent.topLevelComponents.isEmpty) {
             writer.writeLine('export "interop_globals.dart";');
         }
         writer.writeLine('export "promise.dart";');
 
         for (final Component component in components.values) {
-            if (component == null) { continue; }
+            //if (component == null) { continue; }
             if ((!component.shouldWriteToFile) || component.getName().startsWith("_")) { continue; }
             component.writeOutput(writer);
         }
@@ -94,8 +94,8 @@ class Module extends Component {
         for (final String compName in other.components.keys) {
             if (this.components.containsKey(compName)) {
                 // handle conflicts
-                final Component thisComp = this.components[compName];
-                final Component thatComp = other.components[compName];
+                final Component thisComp = this.components[compName]!;
+                final Component thatComp = other.components[compName]!;
 
                 if (thatComp is ClassDef) {
                     if (thisComp is InterfaceDef) {
@@ -125,7 +125,7 @@ class Module extends Component {
                 }
             } else {
                 // no conflict, merge directly
-                this.components[compName] = other.components[compName];
+                this.components[compName] = other.components[compName]!;
             }
         }
     }

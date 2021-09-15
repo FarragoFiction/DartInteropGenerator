@@ -7,22 +7,22 @@ import "package:js/js_util.dart" as jsu;
 import 'babylon.dart' as B;
 
 Future<void> main() async {
-    final CanvasElement canvas = querySelector("#canvas");
+    final CanvasElement canvas = querySelector("#canvas")! as CanvasElement;
     final B.Engine engine = new B.Engine(canvas, true);
     final B.Scene scene = await createScene(engine, canvas);
 
     engine.runRenderLoop(js.allowInterop(() { scene.render(); }));
 
-    B.Promise<String> promise = new B.Promise<String>(js.allowInterop((void Function(String value) accept, void Function(dynamic reason) reject) {
+    /*final B.Promise<String> promise = new B.Promise<String>(js.allowInterop((void Function(String value) accept, void Function(dynamic reason) reject) {
         new Future<void>.delayed(const Duration(seconds: 3), () => accept("hello"));
     }));
 
-    Future<String> s = jsu.promiseToFuture(promise).then((dynamic string) {
+    final Future<String> s = jsu.promiseToFuture(promise).then((dynamic string) {
 
         print("future: $string");
 
         return string;
-    });
+    });*/
 }
 
 Future<B.Scene> createScene(B.Engine engine, CanvasElement canvas) async {

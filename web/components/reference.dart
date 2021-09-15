@@ -2,10 +2,11 @@ import "components.dart";
 
 class TypeRef extends Component with HasGenerics {
 
-    TypeDef type;
+    TypeDef? type;
+    bool isNullable = false;
     //final Set<GenericRef> generics = <GenericRef>{};
     int array = 0;
-    Component genericOf;
+    Component? genericOf;
 
     @override
     void getTypeRefs(Set<TypeRef> references) {
@@ -17,10 +18,11 @@ class TypeRef extends Component with HasGenerics {
     }
 
     @override
-    String getName() => this.type != null ? this.type.name : this.name;
+    String getName() => this.type?.name ?? this.name ?? "unnamed";
 
     @override
-    String toString() => "(${this.getName() == null ? "unnamed" : this.getName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"})";
+    //String toString() => "(${this.getName() == null ? "unnamed" : this.getName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"})";
+    String toString() => "(${this.getName()}${generics.isEmpty ? "" : "<${generics.join(",")}>"})";
 
     @override
     void writeOutput(OutputWriter writer) {
@@ -30,15 +32,18 @@ class TypeRef extends Component with HasGenerics {
         }
         writer.write("List<" * array);
         if (type != null) {
-            type.writeReference(writer, generics);
+            type!.writeReference(writer, generics);
         } else if (genericOf != null) {
-            writer.write(name);
+            writer.write(name!);
         } else {
             //writer.write("[unresolved type $name]");
             print("Unresolved type $name");
             writer.write("dynamic /* unresolved: $name */");
         }
         writer.write(">" * array);
+        if (isNullable) {
+            writer.write("?");
+        }
     }
 }
 
@@ -64,6 +69,9 @@ class TypeUnionRef extends TypeRef {
             for (final TypeRef ref in unionRefs) {
                 if (ref.type != StaticTypes.typeVoid) {
                     check.add(ref);
+                } else {
+                    //print("null union ref $ref in $this");
+                    this.isNullable = true;
                 }
             }
             if (check.length == 1) {
@@ -85,6 +93,9 @@ class TypeUnionRef extends TypeRef {
                 }
             }
         }
+        if (isNullable) {
+            writer.write("?");
+        }
     }
 
     @override
@@ -93,10 +104,10 @@ class TypeUnionRef extends TypeRef {
 
 class LambdaRef extends TypeRef {
     final List<Parameter> arguments = <Parameter>[];
-    TypeRef returnType;
+    TypeRef? returnType;
 
     @override
-    set parentComponent(Component value) {
+    set parentComponent(Component? value) {
         super.parentComponent = value;
 
         for (final Parameter p in arguments) {
@@ -106,7 +117,7 @@ class LambdaRef extends TypeRef {
 
     @override
     void processList(List<dynamic> input) {
-        List<dynamic> params;
+        List<dynamic>? params;
         dynamic returns;
 
         if (input[0] == "{") {
@@ -149,7 +160,7 @@ class LambdaRef extends TypeRef {
 
     @override
     void writeOutput(OutputWriter writer) {
-        returnType.writeOutput(writer);
+        returnType?.writeOutput(writer);
         writer.write(" Function(");
 
         bool optionalsStarted = false;
@@ -173,11 +184,14 @@ class LambdaRef extends TypeRef {
             writer.write("]");
         }
         writer.write(")");
+        if (isNullable) {
+            writer.write("?");
+        }
     }
 
     @override
     Iterable<TypeRef> getOtherTypesForGenericCheck() sync* {
-        yield this.returnType;
-        yield* this.arguments.map((Parameter p) => p.type);
+        yield this.returnType!;
+        yield* this.arguments.map((Parameter p) => p.type!);
     }
 }

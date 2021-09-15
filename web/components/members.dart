@@ -2,7 +2,7 @@
 import "components.dart";
 
 abstract class Member extends Component {
-    Accessor accessor;
+    Accessor? accessor;
     bool static = false;
     bool abstract = false;
     bool readonly = false;
@@ -10,7 +10,7 @@ abstract class Member extends Component {
     Set<Member> ancestors = <Member>{};
     Set<Member> descendants = <Member>{};
 
-    bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name.startsWith("_");
+    bool get private => this.accessor == Accessor.private || this.accessor == Accessor.protected || this.name!.startsWith("_");
 
     @override
     void writeOutput(OutputWriter writer) {
@@ -22,8 +22,12 @@ abstract class Member extends Component {
     }
 }
 
-class Field extends Member {
-    TypeRef type;
+mixin FieldLike on Member {
+    TypeRef? getFieldType();
+}
+
+class Field extends Member implements FieldLike {
+    TypeRef? type;
 
     @override
     void processList(List<dynamic> input) {
@@ -56,6 +60,9 @@ class Field extends Member {
     }
 
     @override
+    TypeRef? getFieldType() => type;
+
+    @override
     void getTypeRefs(Set<TypeRef> references) {
         if (this.getJsName().startsWith("_")) { return; }
         this.type?.processTypeRefs(references);
@@ -72,16 +79,16 @@ class Field extends Member {
         if (!this.ancestors.isEmpty) {
             writer.writeLine("@override");
         }
-        writeGetter(this, type, writer);
+        writeGetter(this, type!, writer);
         if (!readonly) {
             if (!this.ancestors.isEmpty) {
                 writer.writeLine("@override");
             }
-            writeSetter(this, type, writer);
+            writeSetter(this, type!, writer);
         }
     }
 
-    static void writeGetter(Member member, TypeRef type, OutputWriter writer, [String displayName]) {
+    static void writeGetter(Member member, TypeRef type, OutputWriter writer, [String? displayName]) {
         displayName ??= member.getName();
 
         if (member.altName != null) {
@@ -99,7 +106,7 @@ class Field extends Member {
         ;
     }
 
-    static void writeSetter(Member member, TypeRef type, OutputWriter writer, [String displayName]) {
+    static void writeSetter(Member member, TypeRef type, OutputWriter writer, [String? displayName]) {
         displayName ??= member.getName();
 
         if (member.altName != null) {
@@ -120,7 +127,7 @@ class Field extends Member {
 }
 
 class Method extends Member with HasGenerics {
-    TypeRef type;
+    TypeRef? type;
     //Set<GenericRef> generics = <GenericRef>{};
     List<Parameter> arguments = <Parameter>[];
 
@@ -172,7 +179,7 @@ class Method extends Member with HasGenerics {
 
         // make sure generic typed arguments are marked as such
         for (final GenericRef ref in generics) {
-            ref.type.genericOf = this;
+            ref.type?.genericOf = this;
         }
         for (final Parameter arg in arguments) {
             HasGenerics.setGenerics(this, this, arg.type);
@@ -221,7 +228,7 @@ class Method extends Member with HasGenerics {
         if (static) {
             writer.write("static ");
         }
-        type.writeOutput(writer);
+        type?.writeOutput(writer);
         writer
             ..write(" ")
             ..write(this.getJsName());
@@ -276,9 +283,9 @@ class Method extends Member with HasGenerics {
 
 abstract class GetterSetter {}
 
-class Getter extends Member implements GetterSetter {
-    TypeRef type;
-    String fieldName;
+class Getter extends Member implements GetterSetter, FieldLike {
+    TypeRef? type;
+    late String fieldName;
 
     @override
     void processList(List<dynamic> input) {
@@ -311,6 +318,9 @@ class Getter extends Member implements GetterSetter {
     }
 
     @override
+    TypeRef? getFieldType() => type;
+
+    @override
     void getTypeRefs(Set<TypeRef> references) {
         if (this.getJsName().startsWith("_")) { return; }
         this.type?.processTypeRefs(references);
@@ -324,7 +334,7 @@ class Getter extends Member implements GetterSetter {
         if (!this.ancestors.isEmpty) {
             writer.writeLine("@override");
         }
-        Field.writeGetter(this, type, writer, fieldName);
+        Field.writeGetter(this, type!, writer, fieldName);
     }
 
     @override
@@ -336,12 +346,12 @@ class Getter extends Member implements GetterSetter {
     }
 
     @override
-    String getJsName() => this.altName != null ? this.altName : this.fieldName;
+    String getJsName() => this.altName != null ? this.altName! : this.fieldName;
 }
 
-class Setter extends Member implements GetterSetter {
-    Parameter argument;
-    String fieldName;
+class Setter extends Member implements GetterSetter, FieldLike {
+    Parameter? argument;
+    late String fieldName;
 
     @override
     void processList(List<dynamic> input) {
@@ -360,13 +370,16 @@ class Setter extends Member implements GetterSetter {
         // 6 (
         // 7 arg
         this.argument = input[7];
-        this.argument.parentComponent = this;
+        //this.argument.parentComponent = this;
         //ConstrainedObject.markImportant(argument.type);
         // 8 )
         // 9 semicolon
 
         this.argument?.parentComponent = this;
     }
+
+    @override
+    TypeRef? getFieldType() => argument?.type;
 
     @override
     void getTypeRefs(Set<TypeRef> references) {
@@ -382,7 +395,7 @@ class Setter extends Member implements GetterSetter {
         if (!this.ancestors.isEmpty) {
             writer.writeLine("@override");
         }
-        Field.writeSetter(this, argument.type, writer, fieldName);
+        Field.writeSetter(this, argument!.type!, writer, fieldName);
     }
 
     @override
@@ -394,11 +407,11 @@ class Setter extends Member implements GetterSetter {
     }
 
     @override
-    String getJsName() => this.altName != null ? this.altName : this.fieldName;
+    String getJsName() => this.altName != null ? this.altName! : this.fieldName;
 }
 
 class Constructor extends Component {
-    bool private;
+    late bool private;
     Set<Parameter> arguments = <Parameter>{};
 
     @override
@@ -431,18 +444,18 @@ class Constructor extends Component {
 
     @override
     void writeOutput(OutputWriter writer) {
-        final TypeDef owner = parentComponent;
-        final ClassDef parent = owner.parentClass;
+        final TypeDef owner = parentComponent! as TypeDef;
+        final ClassDef? parent = owner.parentClass as ClassDef?;
 
         // wish I didn't have to ignore this but then I also wish the actual null operator *worked*
         // ignore: prefer_null_aware_operators
-        final Constructor parentConstructor = parent == null ? null : parent.constructor;
+        final Constructor? parentConstructor = parent == null ? null : parent.constructor;
 
         writer
             ..writeLine()
             ..writeDocs(this.docs, this.notes)
             ..writeIndented("external factory ")
-            ..write(parentComponent.getName())
+            ..write(parentComponent!.getName())
             ..write("(")
         ;
 
@@ -487,11 +500,11 @@ class Constructor extends Component {
     }
 
     static void writeBlankConstructor(TypeDef clazz, OutputWriter writer) {
-        final ClassDef parent = clazz.parentClass;
+        final ClassDef? parent = clazz.parentClass as ClassDef?;
 
         // wish I didn't have to ignore this but then I also wish the actual null operator *worked*
         // ignore: prefer_null_aware_operators
-        final Constructor parentConstructor = parent == null ? null : parent.constructor;
+        final Constructor? parentConstructor = parent == null ? null : parent.constructor;
 
         writer
             ..writeIndented("external factory ")

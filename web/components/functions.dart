@@ -4,7 +4,7 @@ import "components.dart";
 class FunctionDeclaration extends Component with HasGenerics {
     //final Set<GenericRef> generics = <GenericRef>{};
     final Set<Parameter> arguments = <Parameter>{};
-    TypeRef type;
+    TypeRef? type;
 
     @override
     void processList(List<dynamic> input) {
@@ -76,7 +76,7 @@ class FunctionDeclaration extends Component with HasGenerics {
             writer.writeLine('@JS()');
         }
         writer.writeIndented("external ");
-        type.writeOutput(writer);
+        type?.writeOutput(writer);
         writer
             ..write(" ")
             ..write(this.getJsName());
@@ -98,6 +98,7 @@ class FunctionDeclaration extends Component with HasGenerics {
         for (final Parameter parameter in this.arguments) {
             if (!optionalsStarted) {
                 if (parameter.optional) {
+
                     optionalsStarted = true;
                     writer.write("[");
                 }
@@ -128,7 +129,7 @@ class FunctionDeclaration extends Component with HasGenerics {
 }
 
 class Parameter extends Component {
-    TypeRef type;
+    TypeRef? type;
     bool optional = false;
     bool isArgs = false;
 
@@ -152,7 +153,7 @@ class Parameter extends Component {
         // 3 type
         if (input[3] is TypeRef) {
             this.type = input[3];
-            this.type.parentComponent = this;
+            this.type!.parentComponent = this;
         } else {
             // a string...
         }
@@ -166,7 +167,10 @@ class Parameter extends Component {
 
     @override
     void writeOutput(OutputWriter writer) {
-        this.type.writeOutput(writer);
+        this.type?.writeOutput(writer);
+        if (this.optional && !this.type!.isNullable) {
+            writer.write("?");
+        }
         writer
             ..write(" ")
             ..write(this.getJsName());
@@ -178,15 +182,15 @@ class Parameter extends Component {
 }
 
 class GenericRef extends Component {
-    TypeRef type;
-    TypeRef extend;
+    TypeRef? type;
+    TypeRef? extend;
 
     @override
     void processList(List<dynamic> input) {
         // 0 type
         if (input[0] is TypeRef) {
             this.type = input[0];
-            this.type.parentComponent = this;
+            this.type!.parentComponent = this;
         } else if (input[0] is ArrayBrackets) {
             this.type = input[0].toType();
         } else {
@@ -207,17 +211,17 @@ class GenericRef extends Component {
     }
 
     @override
-    String getName() => this.type.getName();
+    String getName() => this.type?.getName() ?? "unnamed";
 
     @override
     String toString() => "$type${this.extend != null ? " extends $extend" : ""}";
 
     @override
     void writeOutput(OutputWriter writer) {
-        this.type.writeOutput(writer);
+        this.type?.writeOutput(writer);
         if (this.extend != null) {
             writer.write(" extends ");
-            this.extend.writeOutput(writer);
+            this.extend!.writeOutput(writer);
         }
     }
 }

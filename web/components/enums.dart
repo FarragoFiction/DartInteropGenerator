@@ -67,9 +67,9 @@ class Enum extends Component {
 }
 
 class EnumEntry {
-    List<String> docs;
-    String name;
-    int value;
+    List<String>? docs;
+    late String name;
+    late int value;
 
     @override
     String toString() => "$name = $value";

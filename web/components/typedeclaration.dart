@@ -10,6 +10,7 @@ abstract class TypeDeclaration extends TypeDef {
 
 class TypeUnionDef extends TypeDeclaration {
     Set<TypeRef> unionTypes = <TypeRef>{};
+    bool isNullableUnion = false;
 
     @override
     void processList(List<dynamic> input) {
@@ -68,7 +69,7 @@ class TypeUnionDef extends TypeDeclaration {
 }
 
 class TypeThingy extends TypeDeclaration {
-    ConstrainedObject object;
+    late ConstrainedObject object;
 
     @override
     void processList(List<dynamic> input) {

@@ -80,10 +80,10 @@ class Processor {
                 // do replacement classes in stuff
                 if (replacementClasses.containsKey(name)) {
                     //print("Replaced $name with ${replacementClasses[name]}");
-                    name = replacementClasses[name];
+                    name = replacementClasses[name]!;
                 }
                 if (typeMap.containsKey(name)) {
-                    ref.type = typeMap[name];
+                    ref.type = typeMap[name]!;
                 } else if (ref.genericOf == null) {
                     //print("${ref.getName()} not in typeMap${ref.owner == null ? "" : " (from ${ref.owner.getName()})"}");
                     // if it's not a generic, stick it in the unresolved list
@@ -106,6 +106,21 @@ class Processor {
         for (final TypeDef t in typeDefs) {
             if (replacementClasses.containsKey(t.getName())) {
                 t.shouldWriteToFile = false;
+            }
+        }
+
+        // process nullability value for stuff like unions
+        for (final TypeUnionDef def in typeDefs.whereType()) {
+            for (final TypeRef ref in def.unionTypes) {
+                if (ref.type == StaticTypes.typeVoid) {
+                    def.isNullableUnion = true;
+                }
+            }
+        }
+        for (final TypeRef ref in typeRefs) {
+            final TypeDef? t = ref.type;
+            if (t is TypeUnionDef) {
+                ref.isNullable |= t.isNullableUnion;
             }
         }
 
@@ -147,8 +162,8 @@ class Processor {
                 if (inheritRef.type == null || !(inheritRef.type is ClassDef || inheritRef.type is InterfaceDef)) {
                     print("weird inherit in ${type.getName()}: ${inheritRef.type != null ? inheritRef.type.runtimeType : "null"} $inheritRef");
                 } else {
-                    type.ancestors.add(inheritRef.type);
-                    inheritRef.type.descendants.add(type);
+                    type.ancestors.add(inheritRef.type!);
+                    inheritRef.type!.descendants.add(type);
                 }
             }
         }
@@ -195,7 +210,7 @@ class Processor {
                         if (m is Field) {
                             if (m.type is LambdaRef) {
                                 // this is likely a lambda field!
-                                toReplace[member] = m.type;
+                                toReplace[member] = m.type as LambdaRef;
 
                                 return false;
                             }
@@ -209,11 +224,11 @@ class Processor {
 
         // do the replacement
         for (final Method method in toReplace.keys) {
-            final TypeDef type = method.parentComponent;
+            final TypeDef type = method.parentComponent! as TypeDef;
 
             final Field replacementField = new Field()
                 ..name = method.name
-                ..type = toReplace[method]
+                ..type = toReplace[method]!
                 ..ancestors = method.ancestors
                 ..descendants = method.descendants
                 ..parentComponent = type
@@ -273,13 +288,74 @@ class Processor {
                         }
                     }
                     if (member.getName() == "createCylinderEmitter") {
-                        print("${member.getName()} from ${member.parentComponent.getName()}: $fewestRequiredParameters < $baseReq?");
+                        print("${member.getName()} from ${member.parentComponent!.getName()}: $fewestRequiredParameters < $baseReq?");
                     }
                     if (fewestRequiredParameters < baseReq) {
                         for (int i=fewestRequiredParameters; i<baseReq; i++) {
                             member.arguments[i].optional |= true;
                         }
                     }
+                }
+            }
+        }
+
+        // ################################################## propagate nullability state for members ##################################################
+
+        for (final TypeDef type in tsd.allTypes()) {
+            //print("Propagating nullability in ${type.getName()}");
+            for (final Member member in type.members) {
+                if (member is Method) {
+                    // methods
+                    final Method method = member;
+
+                    bool hasNonNullableOutput = false;
+                    final List<bool> hasNonNullableArgument = new List<bool>.filled(method.arguments.length, false);
+
+                    visit(method, (Method m) => m.descendants.whereType<Method>(), (Method m) {
+                        if (method == m) { return true; }
+                        hasNonNullableOutput |= !m.type!.isNullable;
+
+                        for (int i=0; i<hasNonNullableArgument.length; i++) {
+                            hasNonNullableArgument[i] |= !m.arguments[i].type!.isNullable;
+                        }
+
+                        return true;
+                    });
+
+                    if (hasNonNullableOutput) {
+                        if (method.type!.isNullable) {
+                            method.type!.isNullable = false;
+                        }
+                    }
+                    for (int i=0; i<hasNonNullableArgument.length; i++) {
+                        if (hasNonNullableArgument[i]) {
+                            if (method.arguments[i].type!.isNullable) {
+                                method.arguments[i].type!.isNullable = false;
+                            }
+                        }
+                    }
+                } else if (member is FieldLike) {
+                    // fields, getters, setters
+                    final FieldLike field = member;
+                    final TypeRef? ftype = field.getFieldType();
+                    if (ftype == null || !ftype.isNullable) { continue; }
+
+                    print("Propagating nullability to ${type.name} ${field.runtimeType} ${field.name}");
+                    int visits = 0;
+
+                    visit(field, (FieldLike f) => f.descendants.whereType<FieldLike>(), (FieldLike f) {
+                        if (f == field) { return true; }
+                        visits++;
+
+                        if (!f.getFieldType()!.isNullable) {
+                            print("set false");
+                            ftype.isNullable = false;
+                            return false;
+                        }
+                        return true;
+                    });
+
+                    print("visits: $visits");
                 }
             }
         }
@@ -312,7 +388,7 @@ class Processor {
                 }
 
                 if (inlinedObjectTypes.containsKey(type.getName())) {
-                    final InlinedObjectType existing = inlinedObjectTypes[type.getName()];
+                    final InlinedObjectType existing = inlinedObjectTypes[type.getName()]!;
 
                     existing.merge(type);
                     mergeCount++;
@@ -338,43 +414,10 @@ class Processor {
 
             final Map<String, Member> toImplement = <String, Member>{};
 
-            /*for (final TypeDef ancestor in type.ancestors) {
-                if (!ancestor.isAbstract) {
-                    continue;
-                } // and we only care about implementing if the ancestor IS abstract
-
-                //final Map<String, Member> toImplement = <String, Member>{};
-                visit(ancestor, (TypeDef def) => def.ancestors, (TypeDef def) {
-                    for (final Member dMember in def.members) {
-                        bool found = false;
-                        for (final Member member in type.members) {
-                            if (dMember.getName() == member.getName()) {
-                                // force implementation of setters in classes where the abstract isn't readonly
-                                if (dMember is Field && member is Field) {
-                                    if (!dMember.readonly) {
-                                        member.readonly = false;
-                                    }
-                                }
-
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            if (!toImplement.containsKey(dMember.getName())) {
-                                toImplement[dMember.getName()] = dMember;
-                            }
-                        }
-                    }
-
-                    return true;
-                });
-            }*/
-
             visit(type, (TypeDef def) => def.ancestors, (TypeDef def) {
 
                 for (final TypeRef iRef in def.implement) {
-                    final TypeDef iDef = iRef.type;
+                    final TypeDef iDef = iRef.type!;
                     if (!iDef.isAbstract) {
                         continue;
                     }
@@ -486,7 +529,7 @@ class Processor {
         final Set<String> appliedFixes = <String>{};
 
         for (final String fileName in data.keys) {
-            String fileContent = data[fileName];
+            String fileContent = data[fileName]!;
 
             //int id = 0;
             for (final String fixKey in manualFixes.keys) {
@@ -499,7 +542,7 @@ class Processor {
                     if (appliedFixes.contains(fixKey)) {
                         throw Exception("Fix applied twice: $fixKey");
                     }
-                    final String fixValue = manualFixes[fixKey];
+                    final String fixValue = manualFixes[fixKey]!;
 
                     fileContent = fileContent.replaceAll(fixKey, fixValue);
                     appliedFixes.add(fixKey);
@@ -525,6 +568,7 @@ class Processor {
     static void visit<T>(T type, Iterable<T> Function(T type) getList, bool Function(T type) action) {
         if (!action(type)) { return; }
         for (final T t in getList(type)) {
+            if(t == type) { continue; }
             visit(t, getList, action);
         }
     }
@@ -533,8 +577,8 @@ class Processor {
         <dynamic>[(TypeDef def) => def.descendants, (Member def) => def.descendants],
     };
 
-    static void processTypeRef<T extends Member>(T type, TypeRef Function(T type) getRef) {
-        TypeRef ref;
+    static void processTypeRef<T extends Member>(T type, TypeRef? Function(T type) getRef) {
+        TypeRef? ref;
         try {
             ref = getRef(type);
         // ignore: avoid_catching_errors
@@ -545,9 +589,8 @@ class Processor {
 
         if (ref == null || ref.type == null) { return; }
 
-        final Set<TypeRef> ancestorTypeRefs = <TypeRef>{};
+        final Set<TypeRef?> ancestorTypeRefs = <TypeRef>{};
         visit<Member>(type, (Member m) => m.ancestors, (Member member) {
-            if (member == type) { return true; }
             if (!(member is T)) {
                 print("${type.getName()}: ${member.getName()} is ${member.runtimeType}, not $T");
                 return true; }
@@ -562,14 +605,14 @@ class Processor {
 
         if (ancestorTypeRefs.length == 1) {
             //print("${ref.type.getName()} vs ${ancestorTypeRefs.first.type.getName()}");
-            if (ref.type == ancestorTypeRefs.first.type) {
+            if (ref.type == ancestorTypeRefs.first?.type) {
                 return;
             }
         }
 
         final Set<TypeDef> superTypes = getParentTypes(ref.type);
 
-        for (final TypeRef aRef in ancestorTypeRefs) {
+        for (final TypeRef? aRef in ancestorTypeRefs) {
             if (aRef == null || aRef.type == null || aRef.type == StaticTypes.typeDynamic) { continue; }
             if(aRef.type == ref.type) {
                 // it's the same, do nothing
@@ -577,7 +620,7 @@ class Processor {
                 // ok, cool, we have this type
             } else {
                 // uhoh, one of the refs isn't a supertype of the current ref
-                print("dynamic fallback from ${ref.type.getName()} by ${aRef.type.getName()} in ${type.parentComponent.getName()}.${type.getName()}");
+                print("dynamic fallback from ${ref.type!.getName()} by ${aRef.type!.getName()} in ${type.parentComponent!.getName()}.${type.getName()}");
                 print(superTypes.map((TypeDef d) => d.getName()).toList());
                 print(ancestorTypeRefs);
                 ref.type = StaticTypes.typeDynamic;
@@ -586,13 +629,17 @@ class Processor {
         }
     }
 
-    static Set<TypeDef> getParentTypes(TypeDef type) {
+    static Set<TypeDef> getParentTypes(TypeDef? type) {
         final Set<TypeDef> superTypes = <TypeDef>{};
-        visit(type, (TypeDef type) => type.ancestors, (TypeDef def) {
-            if (def == type) { return true; }
-            superTypes.add(def);
-            return true;
-        });
+        if (type != null) {
+            visit(type, (TypeDef type) => type.ancestors, (TypeDef def) {
+                if (def == type) {
+                    return true;
+                }
+                superTypes.add(def);
+                return true;
+            });
+        }
         return superTypes;
     }
 }

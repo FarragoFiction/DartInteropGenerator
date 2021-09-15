@@ -13,10 +13,10 @@ export "typedeclaration.dart";
 export "variable.dart";
 
 abstract class Component {
-    Component parentComponent;
-    String name;
-    String altName;
-    List<String> docs;
+    Component? parentComponent;
+    String? name;
+    String? altName;
+    List<String>? docs;
     final List<String> notes = <String>[];
 
     bool shouldWriteToFile = true;
@@ -31,7 +31,7 @@ abstract class Component {
     void getTypeRefs(Set<TypeRef> references);
     void processTypeRefs(Set<TypeRef> references) { getTypeRefs(references); }
 
-    Iterable<TypeRef> getOtherTypesForGenericCheck() => null;
+    Iterable<TypeRef>? getOtherTypesForGenericCheck() => null;
 
     void checkTypeNames(Set<String> types){
         final String baseName = getName();
@@ -40,8 +40,8 @@ abstract class Component {
         }
     }
 
-    String getName() => name;
-    String getJsName() => this.altName != null ? this.altName : this.getName();
+    String getName() => name ?? "NO_NAME";
+    String getJsName() => this.altName ?? this.getName();
 
     void writeOutput(OutputWriter writer) {
         print("Component missing output: $runtimeType ${getName()}");
@@ -50,11 +50,11 @@ abstract class Component {
     @override
     String toString() => "(${displayString()})";
 
-    String displayName() => (this.name == null || this.name.isEmpty) ? "unnamed" : this.name;
+    String displayName() => (this.name == null || this.name!.isEmpty) ? "unnamed" : this.name!;
     String displayString() => "${this.runtimeType} ${displayName()}";
 
-    static String makeNameSafe(String name) {
-        return name;
+    static String makeNameSafe(String? name) {
+        return name ?? "unnamed";
     }
 
     void merge(Component otherComponent) {
@@ -81,7 +81,7 @@ mixin HasGenerics on Component {
         }
     }
 
-    static void setGenerics(Component parent, HasGenerics genericOwner, TypeRef checkType) {
+    static void setGenerics(Component parent, HasGenerics genericOwner, TypeRef? checkType) {
         if (checkType == null) { return; }
 
         for (final GenericRef generic in genericOwner.generics) {
@@ -94,7 +94,7 @@ mixin HasGenerics on Component {
             setGenerics(parent, genericOwner, generic.type);
         }
 
-        final Iterable<TypeRef> extra = checkType.getOtherTypesForGenericCheck();
+        final Iterable<TypeRef>? extra = checkType.getOtherTypesForGenericCheck();
         if (extra != null) {
             for (final TypeRef ref in extra) {
                 setGenerics(parent, genericOwner, ref);
@@ -102,7 +102,7 @@ mixin HasGenerics on Component {
         }
 
         if (parent.parentComponent != null) {
-            setGenerics(parent.parentComponent, parent.parentComponent, checkType);
+            setGenerics(parent.parentComponent!, parent.parentComponent! as HasGenerics, checkType);
         }
     }
 }
@@ -114,13 +114,13 @@ class OutputWriter {
     void writeLine([String string = ""]) => buffer.writeln("${"\t" * indent}$string");
     void write(String string) => buffer.write(string);
     void writeIndented(String string) => buffer.write("${"\t" * indent}$string");
-    void writeDocs(List<String> docs, List<String> comments) {
+    void writeDocs(List<String>? docs, List<String>? comments) {
         final int docsLength = docs == null ? 0 : docs.length;
         final int commentsLength = comments == null ? 0 : comments.length;
         if (docsLength == 0 && commentsLength == 0) { return; }
 
         if (docsLength > 0) {
-            for (final String line in docs) {
+            for (final String line in docs!) {
                 writeIndented("/// ");
                 write(line);
                 write("\n");
@@ -133,7 +133,7 @@ class OutputWriter {
 
         if (commentsLength > 0) {
             writeLine("/// Conversion notes:");
-            for (final String line in comments) {
+            for (final String line in comments!) {
                 writeIndented("/// ");
                 write(line);
                 write("\n");

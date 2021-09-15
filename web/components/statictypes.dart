@@ -162,7 +162,7 @@ class Accessor {
     static Accessor process(dynamic item) {
         item = (item == null || item is String) ? item : item.value;
         if (item != null && byName.containsKey(item)) {
-            return byName[item];
+            return byName[item]!;
         }
         return Accessor.public;
     }
@@ -171,7 +171,7 @@ class Accessor {
 class ArrayBrackets {
     int count = 0;
 
-    TypeRef toType() {
+    TypeRef? toType() {
         if (count == 0) { return null; }
         TypeRef type = new TypeRef()..type = StaticTypes.typeDynamic;
         for (int i=0; i<count; i++) {

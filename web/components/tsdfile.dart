@@ -9,10 +9,10 @@ class TSDFile extends Component {
         for (final dynamic item in input) {
             if (item is Module) {
                 if (!modules.containsKey(item.name)) {
-                    modules[item.name] = item;
+                    modules[item.name!] = item;
                     item.parentComponent = this;
                 } else {
-                    final Module module = modules[item.name];
+                    final Module module = modules[item.name!]!;
                     //module.components.addAll(item.components);
                     module.merge(item);
                 }
@@ -29,7 +29,7 @@ class TSDFile extends Component {
             for (final Module m in modules.values) {
                 final String cName = comp.getName();
                 if (m.components.containsKey(cName)) {
-                    final Component mComp = m.components[cName];
+                    final Component mComp = m.components[cName]!;
 
                     if (comp is InterfaceDef && mComp is ClassDef) {
                         toRemove.add(comp);
@@ -83,15 +83,15 @@ class TSDFile extends Component {
     }
 
     @override
-    void processTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) { getTypeRefs(references, exclusions); }
+    void processTypeRefs(Set<TypeRef> references, [Set<String>? exclusions]) { getTypeRefs(references, exclusions); }
 
     @override
-    void getTypeRefs(Set<TypeRef> references, [Set<String> exclusions]) {
+    void getTypeRefs(Set<TypeRef> references, [Set<String>? exclusions]) {
         for (final Module ref in modules.values) {
             ref.processTypeRefs(references, exclusions);
         }
         for (final Component ref in topLevelComponents) {
-            if (!exclusions.contains(ref.getName())) {
+            if (exclusions != null && !exclusions.contains(ref.getName())) {
                 ref.processTypeRefs(references);
             } else {
                 ref.shouldWriteToFile = false;
@@ -109,7 +109,7 @@ class TSDFile extends Component {
     }
 
     @override
-    void writeOutput(OutputWriter writer, [List<String> importNames]) {
+    void writeOutput(OutputWriter writer, [List<String>? importNames]) {
         writer
             ..writeLine('@JS()')
             ..writeLine('library InteropGlobals;')
@@ -132,7 +132,7 @@ class TSDFile extends Component {
         }
 
         for (final Component component in topLevelComponents) {
-            if (component == null) { continue; }
+            //if (component == null) { continue; }
             if ((!component.shouldWriteToFile) || component.getName().startsWith("_")) { continue; }
             component.writeOutput(writer);
         }

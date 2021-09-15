@@ -28,8 +28,8 @@ Future<void> main(List<String> arguments) async {
 
     final File inputFile = new File(Path.join(programPath, argResults[inputArg]));
     final String data = (await inputFile.readAsString()).replaceAllMapped(commentStripper, (Match m) {
-        if (m.group(1) != null && !m.group(1).isEmpty) {
-            return m.group(0);
+        if (m.group(1) != null && !m.group(1)!.isEmpty) {
+            return m.group(0)!;
         }
         return "";
     }).replaceAll(commentStripper2,"");
@@ -69,7 +69,7 @@ Future<void> main(List<String> arguments) async {
         //print("\nend $name");
 
         final File outputFile = new File(Path.join(outputPath, "$name.dart"));
-        outputFile.writeAsString(files[name]);
+        outputFile.writeAsString(files[name]!);
     }
 }
 

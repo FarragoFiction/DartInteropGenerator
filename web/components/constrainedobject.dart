@@ -85,9 +85,9 @@ class ConstrainedObject extends TypeRef {
     }
 
     @override
-    Iterable<TypeRef> getOtherTypesForGenericCheck() => fields.map((Field f) => f.type);
+    Iterable<TypeRef> getOtherTypesForGenericCheck() => fields.map((Field f) => f.type!);
 
-    static void writeObjectTemplateClass<T extends Component>(OutputWriter writer, String jsName, Map<String, T> fields, {Component Function(T c) process, String name, Iterable<GenericRef> generics, List<String> docs, List<String> notes}) {
+    static void writeObjectTemplateClass<T extends Component>(OutputWriter writer, String jsName, Map<String, T> fields, {Component Function(T c)? process, String? name, Iterable<GenericRef>? generics, List<String>? docs, List<String>? notes}) {
         process ??= (Component c) => c;
         name ??= jsName;
 
@@ -130,7 +130,7 @@ class ConstrainedObject extends TypeRef {
                 ..write(jsName)..write("({");
 
             for (final String name in fields.keys) {
-                final T type = fields[name];
+                final T type = fields[name]!;
 
                 process(type).writeOutput(writer);
                 writer..write(" ")..write(name);
@@ -145,7 +145,7 @@ class ConstrainedObject extends TypeRef {
 
         // all the fields
         for (final String name in fields.keys) {
-            final T type = fields[name];
+            final T type = fields[name]!;
             writer
                 ..writeLine()
                 ..writeDocs(type.docs, type.notes)
@@ -169,7 +169,7 @@ class ConstrainedObject extends TypeRef {
 }
 
 class InlinedObjectType extends TypeDef {
-    ConstrainedObject basedOn;
+    late ConstrainedObject basedOn;
 
     @override
     void writeOutput(OutputWriter writer) {
@@ -185,9 +185,9 @@ class InlinedObjectType extends TypeDef {
 
     void processGenerics() {
         for (final Field f in fields) {
-            if (f.type.genericOf != null) {
+            if (f.type!.genericOf != null) {
                 this.generics.add(new GenericRef()..type=f.type);
-                print("${this.getName()} generic: ${f.type.getName()}");
+                print("${this.getName()} generic: ${f.type!.getName()}");
             }
         }
     }
@@ -208,7 +208,7 @@ class InlinedObjectType extends TypeDef {
 
             Component obj = basedOn;
             while (obj.parentComponent != null) {
-                obj = obj.parentComponent;
+                obj = obj.parentComponent!;
 
                 if (!(obj is TypeRef || obj is GenericRef)) {
                     /*if (obj.getJsName() == null) {
@@ -222,8 +222,8 @@ class InlinedObjectType extends TypeDef {
                 }
             }
 
-            this.name = parts.reversed.map((String s) => s == null ? "_" : "${s.substring(0,1).toUpperCase()}${s.substring(1)}").join();
+            this.name = parts.reversed.map((String s) => s.isEmpty ? "_" : "${s.substring(0,1).toUpperCase()}${s.substring(1)}").join();
         }
-        return this.name;
+        return this.name!;
     }
 }
