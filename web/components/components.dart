@@ -70,7 +70,9 @@ mixin HasGenerics on Component {
         this.getTypeRefs(intermediary);
 
         for (final TypeRef ref in intermediary) {
-            //print("${ref.runtimeType} ${ref.name} ---");
+            //if (ref.runtimeType.toString() != "TypeRef") {
+                //print("${ref.runtimeType} ${ref.name} ---");
+            //}
             if (ref.type != null || ref.name == null ) {
                 references.add(ref);
                 continue;

@@ -52,6 +52,7 @@ class TypeUnionRef extends TypeRef {
 
     @override
     void getTypeRefs(Set<TypeRef> references) {
+        //print("get union ref $this into ${references.hashCode} from ${this.parentComponent?.getName()} ${this.parentComponent?.runtimeType}");
         for (final TypeRef ref in unionRefs) {
             ref.processTypeRefs(references);
         }

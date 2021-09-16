@@ -379,7 +379,7 @@ class Setter extends Member implements GetterSetter, FieldLike {
     }
 
     @override
-    TypeRef? getFieldType() => argument?.type;
+    TypeRef? getFieldType() => argument!.type;
 
     @override
     void getTypeRefs(Set<TypeRef> references) {

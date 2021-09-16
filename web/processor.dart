@@ -1,3 +1,5 @@
+import "dart:math" as Math;
+
 import "package:petitparser/petitparser.dart";
 
 import "components/components.dart";
@@ -47,8 +49,10 @@ class Processor {
         //prune the js classes out because we don't want the mixins
         typeDefs.removeWhere((TypeDef def) => jsClasses.contains(def.getName()));
 
+        //print("fill refs set");
         final Set<TypeRef> typeRefs = <TypeRef>{};
         tsd.processTypeRefs(typeRefs, jsClasses);
+        //print("refs set: ${typeRefs.hashCode}");
         final Set<Enum> enums = <Enum>{};
         tsd.processEnums(enums);
 
@@ -121,6 +125,12 @@ class Processor {
             final TypeDef? t = ref.type;
             if (t is TypeUnionDef) {
                 ref.isNullable |= t.isNullableUnion;
+            } else if (t == StaticTypes.typeVoid) {
+                final Component? parent = ref.parentComponent;
+                if (parent is TypeUnionRef) {
+                    //print("found void union? $parent");
+                    parent.isNullable = true;
+                }
             }
         }
 
@@ -287,9 +297,9 @@ class Processor {
                             member.arguments.add(p);
                         }
                     }
-                    if (member.getName() == "createCylinderEmitter") {
+                    /*if (member.getName() == "createCylinderEmitter") {
                         print("${member.getName()} from ${member.parentComponent!.getName()}: $fewestRequiredParameters < $baseReq?");
-                    }
+                    }*/
                     if (fewestRequiredParameters < baseReq) {
                         for (int i=fewestRequiredParameters; i<baseReq; i++) {
                             member.arguments[i].optional |= true;
@@ -301,63 +311,94 @@ class Processor {
 
         // ################################################## propagate nullability state for members ##################################################
 
+        final Set<Member> nullPropagationSet = <Member>{};
+
         for (final TypeDef type in tsd.allTypes()) {
             //print("Propagating nullability in ${type.getName()}");
             for (final Member member in type.members) {
-                if (member is Method) {
-                    // methods
-                    final Method method = member;
+                nullPropagationSet.add(member);
+            }
+        }
+        while (nullPropagationSet.isNotEmpty) {
+            final Member member = nullPropagationSet.first;
+            nullPropagationSet.remove(member);
 
-                    bool hasNonNullableOutput = false;
-                    final List<bool> hasNonNullableArgument = new List<bool>.filled(method.arguments.length, false);
+            if (member is Method) {
+                // methods
+                final Method method = member;
 
-                    visit(method, (Method m) => m.descendants.whereType<Method>(), (Method m) {
-                        if (method == m) { return true; }
-                        hasNonNullableOutput |= !m.type!.isNullable;
+                bool hasNullableOutput = false;
+                final List<bool> hasNullableArgument = new List<bool>.filled(method.arguments.length, false);
 
-                        for (int i=0; i<hasNonNullableArgument.length; i++) {
-                            hasNonNullableArgument[i] |= !m.arguments[i].type!.isNullable;
+                for (final dynamic dir in inheritanceDirections) {
+                    visit(method, dir[2], (Method m) {
+                        if (method == m) {
+                            return true;
+                        }
+                        hasNullableOutput |= m.type!.isNullable;
+
+                        final int fewestArguments = Math.min(m.arguments.length, hasNullableArgument.length);
+
+                        for (int i = 0; i < fewestArguments; i++) {
+                            hasNullableArgument[i] |= m.arguments[i].type!.isNullable;
                         }
 
                         return true;
                     });
+                }
 
-                    if (hasNonNullableOutput) {
-                        if (method.type!.isNullable) {
-                            method.type!.isNullable = false;
+                if (hasNullableOutput) {
+                    if (!method.type!.isNullable) {
+                        method.type!.isNullable = true;
+                        nullPropagationSet.add(method);
+                    }
+                }
+                for (int i=0; i<hasNullableArgument.length; i++) {
+                    if (hasNullableArgument[i]) {
+                        if (!method.arguments[i].type!.isNullable) {
+                            method.arguments[i].type!.isNullable = true;
+                            nullPropagationSet.add(method);
                         }
                     }
-                    for (int i=0; i<hasNonNullableArgument.length; i++) {
-                        if (hasNonNullableArgument[i]) {
-                            if (method.arguments[i].type!.isNullable) {
-                                method.arguments[i].type!.isNullable = false;
-                            }
+                }
+            } else if (member is FieldLike) {
+                // fields, getters, setters
+                final FieldLike field = member;
+                final TypeRef? ftype = field.getFieldType();
+                if (ftype == null) { continue; }
+
+                //print("Propagating nullability to ${field.parentComponent?.getName()} ${field.runtimeType} ${field.name} type ${ftype.getName()}: current state ${ftype.isNullable}");
+                int visits = 0;
+                bool nullableLineage = false;
+
+                for (final dynamic dir in inheritanceDirections) {
+                    visit(field, dir[3], (FieldLike f) {
+                        if (f == field) {
+                            return true;
                         }
-                    }
-                } else if (member is FieldLike) {
-                    // fields, getters, setters
-                    final FieldLike field = member;
-                    final TypeRef? ftype = field.getFieldType();
-                    if (ftype == null || !ftype.isNullable) { continue; }
-
-                    print("Propagating nullability to ${type.name} ${field.runtimeType} ${field.name}");
-                    int visits = 0;
-
-                    visit(field, (FieldLike f) => f.descendants.whereType<FieldLike>(), (FieldLike f) {
-                        if (f == field) { return true; }
                         visits++;
 
-                        if (!f.getFieldType()!.isNullable) {
-                            print("set false");
-                            ftype.isNullable = false;
+                        //print("checking ${f.parentComponent?.getName()}.${f.getName()} type ${f.getFieldType()!.getName()}");
+
+                        if (f.getFieldType()!.isNullable) {
+                            nullableLineage = true;
+                            //print("nullable: true");
                             return false;
                         }
+                        //print("nullable: false");
                         return true;
                     });
-
-                    print("visits: $visits");
                 }
+
+                if (nullableLineage && !ftype.isNullable) {
+                    //print("set nullable");
+                    ftype.isNullable = true;
+                    nullPropagationSet.add(field);
+                }
+
+                //print("visits: $visits");
             }
+
         }
 
         // ################################################## js object template interfaces ##################################################
@@ -407,7 +448,8 @@ class Processor {
         tsd.topLevelComponents.addAll(inlinedObjectTypes.values);
 
         // ################################################## missing concrete implementations ##################################################
-        // IMPORTANT: this section MUST be last because it's lax with relations
+        // IMPORTANT: this section MUST be after anything relying directly on specific relations, as it is very lax and just references
+        // the other members directly in the types it implements in, rather than copying
 
         for (final TypeDef type in tsd.allTypes()) {
             if (type.isAbstract) { continue; } // don't care about implementing if we're abstract
@@ -465,7 +507,7 @@ class Processor {
                     continue;
                 }
 
-                // if it it's implemented in an abstract ancestor, then do something about that
+                // if it's implemented in an abstract ancestor, then do something about that
                 if (member is Field) {
                     final Set<Member> toRemove = <Member>{};
                     for (final GetterSetter gs in type.members.whereType()) {
@@ -495,6 +537,83 @@ class Processor {
                     type.members.add(member);
                 }
             }
+        }
+
+        // ################################################## final nullability sweep ##################################################
+        // this is meant to catch the problem of implemented abstract methods not matching nullability across multiple inheritance
+        // operates on the type level overall because of the abstract implementation being lax
+
+        for (final TypeDef type in tsd.allTypes()) {
+            // for each type, we look through it and all of its ancestors, find all methods which appear in more than one of them, THEN do the nullability check
+            // we need to do this because cases where there is no concrete implementation within a class (inherits from another class), but it has a conflicting
+            // inherited method/field/getter/setter from an implemented interface
+            //
+            // what a nightmare...
+
+            // first we note down each type in the ancestry and how many times each member name appears among them
+            final Set<TypeDef> typesToCheck = <TypeDef>{};
+            final Map<String,int> memberCounts = <String,int>{};
+
+            visit(type, (TypeDef def) => def.ancestors, (TypeDef def) {
+                typesToCheck.add(def);
+                for (final Member member in def.members) {
+                    if (member is Method || member is FieldLike) {
+                        final String name = member.getName();
+                        if (!memberCounts.containsKey(name)) {
+                            memberCounts[name] = 0;
+                        }
+                        memberCounts[name] = memberCounts[name]! + 1;
+                    }
+                }
+                return true;
+            });
+
+            // now we collate the counts so we have a list of only members which appear in at least two of them
+            final Set<String> memberNamesToCheck = memberCounts.keys.where((String key) => memberCounts[key]! > 1).toSet();
+
+            // then we run through the types getting the members with those names into their own lists for checking
+            final Map<String,Set<Method>> methodsToCheck = <String,Set<Method>>{};
+            final Map<String,Set<FieldLike>> fieldsToCheck = <String,Set<FieldLike>>{};
+
+            for (final TypeDef type in typesToCheck) {
+                for (final Member member in type.members) {
+                    for (final String name in memberNamesToCheck) {
+                        if (member.getName() == name) {
+                            if (member is Method) {
+                                if (!methodsToCheck.containsKey(name)) {
+                                    methodsToCheck[name] = <Method>{};
+                                }
+                                methodsToCheck[name]!.add(member);
+                            } else if (member is FieldLike) {
+                                if (!fieldsToCheck.containsKey(name)) {
+                                    fieldsToCheck[name] = <FieldLike>{};
+                                }
+                                fieldsToCheck[name]!.add(member);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // now for each of the two lists, we check if anything needs to be changed nullability-ways by finding out if any part needs making nullable
+            for (final String memberName in fieldsToCheck.keys) {
+                bool nullable = false;
+                for (final FieldLike field in fieldsToCheck[memberName]!) {
+                    final TypeRef? ref = field.getFieldType();
+                    if (ref != null && ref.isNullable) {
+                        nullable = true;
+                        break;
+                    }
+                }
+
+                if (nullable) {
+                    for (final FieldLike field in fieldsToCheck[memberName]!) {
+                        field.getFieldType()?.isNullable = true;
+                    }
+                }
+            }
+
+            // aaaaand I'll put the thing in for methods if it becomes an issue >.>
         }
     }
 
@@ -573,8 +692,8 @@ class Processor {
         }
     }
     static final Set<List<dynamic>> inheritanceDirections = <List<dynamic>>{
-        <dynamic>[(TypeDef def) => def.ancestors,   (Member def) => def.ancestors],
-        <dynamic>[(TypeDef def) => def.descendants, (Member def) => def.descendants],
+        <dynamic>[(TypeDef def) => def.ancestors,   (Member def) => def.ancestors, (Method def) => def.ancestors.whereType<Method>(), (FieldLike def) => def.ancestors.whereType<FieldLike>()],
+        <dynamic>[(TypeDef def) => def.descendants, (Member def) => def.descendants, (Method def) => def.descendants.whereType<Method>(), (FieldLike def) => def.descendants.whereType<FieldLike>()],
     };
 
     static void processTypeRef<T extends Member>(T type, TypeRef? Function(T type) getRef) {
