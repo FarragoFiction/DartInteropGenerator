@@ -37,7 +37,7 @@ Future<B.Scene> createScene(B.Engine engine, CanvasElement canvas) async {
     final String vert = await Loader.getResource("basic.vert");
     final String frag = await Loader.getResource("timehole.frag");
     
-    final B.ShaderMaterial material = new B.ShaderMaterial("material", scene, B.IShaderMaterialOptions( vertexSource: vert, fragmentSource: frag ))
+    final B.ShaderMaterial material = new B.ShaderMaterial("material", scene, jsu.jsify(<String,dynamic>{ "vertexSource": vert, "fragmentSource": frag }))
         ..backFaceCulling = false;
 
     plane.material = material;

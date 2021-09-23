@@ -12,6 +12,7 @@ import "package:js/js.dart";
 
 import "babylon.dart";
 import "babylon_debug.dart";
+import "babylon_extensions.dart";
 import "interop_globals.dart";
 import "promise.dart";
 
@@ -81,7 +82,7 @@ abstract class VRDisplay {// extends HTML.EventTarget {
 	
 	/// If this VRDisplay supports room-scale experiences, the optional
 	/// stage attribute contains details on the room-scale parameters.
-	external VRStageParameters get stageParameters;
+	external VRStageParameters? get stageParameters;
 	
 	/// Passing the value returned by `requestAnimationFrame` to
 	/// `cancelAnimationFrame` will unregister the callback.
@@ -150,7 +151,7 @@ abstract class VRDisplay {// extends HTML.EventTarget {
 	/// canvas as any other operation that uses its source image, and canvases
 	/// created without preserveDrawingBuffer set to true will be cleared.
 	/// @param pose Define the pose to submit
-	external void submitFrame([VRPose pose]);
+	external void submitFrame([VRPose? pose]);
 }
 
 /* var */
@@ -160,14 +161,14 @@ external dynamic get VRDisplay_js;
 @JS()
 abstract class VRLayer {
 	
-	external dynamic get leftBounds;
-	external set leftBounds(dynamic value);
+	external dynamic? get leftBounds;
+	external set leftBounds(dynamic? value);
 	
-	external dynamic get rightBounds;
-	external set rightBounds(dynamic value);
+	external dynamic? get rightBounds;
+	external set rightBounds(dynamic? value);
 	
-	external HTML.CanvasElement get source;
-	external set source(HTML.CanvasElement value);
+	external HTML.CanvasElement? get source;
+	external set source(HTML.CanvasElement? value);
 }
 
 @JS()
@@ -228,17 +229,17 @@ abstract class VRFrameData {
 @JS()
 abstract class VRPose {
 	
-	external Float32List get angularAcceleration;
+	external Float32List? get angularAcceleration;
 	
-	external Float32List get angularVelocity;
+	external Float32List? get angularVelocity;
 	
-	external Float32List get linearAcceleration;
+	external Float32List? get linearAcceleration;
 	
-	external Float32List get linearVelocity;
+	external Float32List? get linearVelocity;
 	
-	external Float32List get orientation;
+	external Float32List? get orientation;
 	
-	external Float32List get position;
+	external Float32List? get position;
 	
 	external num get timestamp;
 }
@@ -304,7 +305,7 @@ abstract class XRInputSourceChangeEvent {
 @JS()
 class XRRay {
 	
-	external factory XRRay(dynamic transformOrOrigin, [dynamic /* unresolved: DOMPointInit */ direction]);
+	external factory XRRay(dynamic transformOrOrigin, [dynamic /* unresolved: DOMPointInit */? direction]);
 	
 	external HTML.DomPointReadOnly get origin;
 	external set origin(HTML.DomPointReadOnly value);
@@ -364,10 +365,10 @@ abstract class XRAnchorCreator {
 @anonymous
 class FileToolsSetCorsBehaviorElement {
 	
-	external factory FileToolsSetCorsBehaviorElement({String crossOrigin});
+	external factory FileToolsSetCorsBehaviorElement({String? crossOrigin});
 	
-	external String get crossOrigin;
-	external set crossOrigin( String value );
+	external String? get crossOrigin;
+	external set crossOrigin( String? value );
 }
 
 @JS()
@@ -461,6 +462,38 @@ class ThinEngineGetGlInfo {
 	
 	external String get version;
 	external set version( String value );
+}
+
+@JS()
+@anonymous
+class ThinEngineCreateRenderTargetTextureSize {
+	
+	external factory ThinEngineCreateRenderTargetTextureSize({num width, num height, num layers});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get layers;
+	external set layers( num value );
+}
+
+@JS()
+@anonymous
+class ThinEngineCreateDepthStencilTextureSize {
+	
+	external factory ThinEngineCreateDepthStencilTextureSize({num width, num height, num layers});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get layers;
+	external set layers( num value );
 }
 
 @JS()
@@ -1079,13 +1112,13 @@ class VertexDataCreateTorusOptions {
 @anonymous
 class VertexDataCreateLineSystemOptions {
 	
-	external factory VertexDataCreateLineSystemOptions({List<List<Vector3>> lines, List<List<Color4>> colors});
+	external factory VertexDataCreateLineSystemOptions({List<List<Vector3>> lines, List<List<Color4>>? colors});
 	
 	external List<List<Vector3>> get lines;
 	external set lines( List<List<Vector3>> value );
 	
-	external List<List<Color4>> get colors;
-	external set colors( List<List<Color4>> value );
+	external List<List<Color4>>? get colors;
+	external set colors( List<List<Color4>>? value );
 }
 
 @JS()
@@ -1635,36 +1668,36 @@ class AnalyserDEBUGCANVASSIZE {
 @anonymous
 class ToolsSetCorsBehaviorElement {
 	
-	external factory ToolsSetCorsBehaviorElement({String crossOrigin});
+	external factory ToolsSetCorsBehaviorElement({String? crossOrigin});
 	
-	external String get crossOrigin;
-	external set crossOrigin( String value );
+	external String? get crossOrigin;
+	external set crossOrigin( String? value );
 }
 
 @JS()
 @anonymous
 class ToolsRegisterTopRootEventsEvents {
 	
-	external factory ToolsRegisterTopRootEventsEvents({String name, dynamic Function(HTML.FocusEvent e) handler});
+	external factory ToolsRegisterTopRootEventsEvents({String name, dynamic Function(HTML.FocusEvent e)? handler});
 	
 	external String get name;
 	external set name( String value );
 	
-	external dynamic Function(HTML.FocusEvent e) get handler;
-	external set handler( dynamic Function(HTML.FocusEvent e) value );
+	external dynamic Function(HTML.FocusEvent e)? get handler;
+	external set handler( dynamic Function(HTML.FocusEvent e)? value );
 }
 
 @JS()
 @anonymous
 class ToolsUnregisterTopRootEventsEvents {
 	
-	external factory ToolsUnregisterTopRootEventsEvents({String name, dynamic Function(HTML.FocusEvent e) handler});
+	external factory ToolsUnregisterTopRootEventsEvents({String name, dynamic Function(HTML.FocusEvent e)? handler});
 	
 	external String get name;
 	external set name( String value );
 	
-	external dynamic Function(HTML.FocusEvent e) get handler;
-	external set handler( dynamic Function(HTML.FocusEvent e) value );
+	external dynamic Function(HTML.FocusEvent e)? get handler;
+	external set handler( dynamic Function(HTML.FocusEvent e)? value );
 }
 
 @JS()
@@ -2202,7 +2235,7 @@ class SphereBuilderCreateSphereOptions {
 @anonymous
 class LinesBuilderCreateLineSystemOptions {
 	
-	external factory LinesBuilderCreateLineSystemOptions({List<List<Vector3>> lines, bool updatable, LinesMesh instance, List<List<Color4>> colors, bool useVertexAlpha});
+	external factory LinesBuilderCreateLineSystemOptions({List<List<Vector3>> lines, bool updatable, LinesMesh? instance, List<List<Color4>>? colors, bool useVertexAlpha});
 	
 	external List<List<Vector3>> get lines;
 	external set lines( List<List<Vector3>> value );
@@ -2210,11 +2243,11 @@ class LinesBuilderCreateLineSystemOptions {
 	external bool get updatable;
 	external set updatable( bool value );
 	
-	external LinesMesh get instance;
-	external set instance( LinesMesh value );
+	external LinesMesh? get instance;
+	external set instance( LinesMesh? value );
 	
-	external List<List<Color4>> get colors;
-	external set colors( List<List<Color4>> value );
+	external List<List<Color4>>? get colors;
+	external set colors( List<List<Color4>>? value );
 	
 	external bool get useVertexAlpha;
 	external set useVertexAlpha( bool value );
@@ -2224,7 +2257,7 @@ class LinesBuilderCreateLineSystemOptions {
 @anonymous
 class LinesBuilderCreateLinesOptions {
 	
-	external factory LinesBuilderCreateLinesOptions({List<Vector3> points, bool updatable, LinesMesh instance, List<Color4> colors, bool useVertexAlpha});
+	external factory LinesBuilderCreateLinesOptions({List<Vector3> points, bool updatable, LinesMesh? instance, List<Color4> colors, bool useVertexAlpha});
 	
 	external List<Vector3> get points;
 	external set points( List<Vector3> value );
@@ -2232,8 +2265,8 @@ class LinesBuilderCreateLinesOptions {
 	external bool get updatable;
 	external set updatable( bool value );
 	
-	external LinesMesh get instance;
-	external set instance( LinesMesh value );
+	external LinesMesh? get instance;
+	external set instance( LinesMesh? value );
 	
 	external List<Color4> get colors;
 	external set colors( List<Color4> value );
@@ -2454,19 +2487,19 @@ class PlaneRotationGizmoOnSnapObservable {
 @anonymous
 class GizmoManagerGizmos {
 	
-	external factory GizmoManagerGizmos({PositionGizmo positionGizmo, RotationGizmo rotationGizmo, ScaleGizmo scaleGizmo, BoundingBoxGizmo boundingBoxGizmo});
+	external factory GizmoManagerGizmos({PositionGizmo? positionGizmo, RotationGizmo? rotationGizmo, ScaleGizmo? scaleGizmo, BoundingBoxGizmo? boundingBoxGizmo});
 	
-	external PositionGizmo get positionGizmo;
-	external set positionGizmo( PositionGizmo value );
+	external PositionGizmo? get positionGizmo;
+	external set positionGizmo( PositionGizmo? value );
 	
-	external RotationGizmo get rotationGizmo;
-	external set rotationGizmo( RotationGizmo value );
+	external RotationGizmo? get rotationGizmo;
+	external set rotationGizmo( RotationGizmo? value );
 	
-	external ScaleGizmo get scaleGizmo;
-	external set scaleGizmo( ScaleGizmo value );
+	external ScaleGizmo? get scaleGizmo;
+	external set scaleGizmo( ScaleGizmo? value );
 	
-	external BoundingBoxGizmo get boundingBoxGizmo;
-	external set boundingBoxGizmo( BoundingBoxGizmo value );
+	external BoundingBoxGizmo? get boundingBoxGizmo;
+	external set boundingBoxGizmo( BoundingBoxGizmo? value );
 }
 
 @JS()
@@ -3502,7 +3535,7 @@ class MeshBuilderCreateTorusKnotOptions {
 @anonymous
 class MeshBuilderCreateLineSystemOptions {
 	
-	external factory MeshBuilderCreateLineSystemOptions({List<List<Vector3>> lines, bool updatable, LinesMesh instance, List<List<Color4>> colors, bool useVertexAlpha});
+	external factory MeshBuilderCreateLineSystemOptions({List<List<Vector3>> lines, bool updatable, LinesMesh? instance, List<List<Color4>>? colors, bool useVertexAlpha});
 	
 	external List<List<Vector3>> get lines;
 	external set lines( List<List<Vector3>> value );
@@ -3510,11 +3543,11 @@ class MeshBuilderCreateLineSystemOptions {
 	external bool get updatable;
 	external set updatable( bool value );
 	
-	external LinesMesh get instance;
-	external set instance( LinesMesh value );
+	external LinesMesh? get instance;
+	external set instance( LinesMesh? value );
 	
-	external List<List<Color4>> get colors;
-	external set colors( List<List<Color4>> value );
+	external List<List<Color4>>? get colors;
+	external set colors( List<List<Color4>>? value );
 	
 	external bool get useVertexAlpha;
 	external set useVertexAlpha( bool value );
@@ -3524,7 +3557,7 @@ class MeshBuilderCreateLineSystemOptions {
 @anonymous
 class MeshBuilderCreateLinesOptions {
 	
-	external factory MeshBuilderCreateLinesOptions({List<Vector3> points, bool updatable, LinesMesh instance, List<Color4> colors, bool useVertexAlpha});
+	external factory MeshBuilderCreateLinesOptions({List<Vector3> points, bool updatable, LinesMesh? instance, List<Color4> colors, bool useVertexAlpha});
 	
 	external List<Vector3> get points;
 	external set points( List<Vector3> value );
@@ -3532,8 +3565,8 @@ class MeshBuilderCreateLinesOptions {
 	external bool get updatable;
 	external set updatable( bool value );
 	
-	external LinesMesh get instance;
-	external set instance( LinesMesh value );
+	external LinesMesh? get instance;
+	external set instance( LinesMesh? value );
 	
 	external List<Color4> get colors;
 	external set colors( List<Color4> value );

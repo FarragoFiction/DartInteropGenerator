@@ -11,6 +11,7 @@ import "dart:web_gl" as WebGL;
 import "package:js/js.dart";
 
 import "babylon.dart";
+import "babylon_extensions.dart";
 import "interop_globals.dart";
 import "promise.dart";
 
@@ -28,7 +29,7 @@ class AxesViewer {
 	/// @param xAxis defines the node hierarchy used to render the x-axis
 	/// @param yAxis defines the node hierarchy used to render the y-axis
 	/// @param zAxis defines the node hierarchy used to render the z-axis
-	external factory AxesViewer(Scene scene, [num scaleLines, num renderingGroupId, TransformNode xAxis, TransformNode yAxis, TransformNode zAxis]);
+	external factory AxesViewer(Scene scene, [num? scaleLines, num? renderingGroupId, TransformNode? xAxis, TransformNode? yAxis, TransformNode? zAxis]);
 	
 	/// Gets the hosting scene
 	external Scene get scene;
@@ -72,15 +73,15 @@ class BoneAxesViewer extends AxesViewer {
 	/// @param bone defines the target bone
 	/// @param mesh defines the target mesh
 	/// @param scaleLines defines a scaling factor for line length (1 by default)
-	external factory BoneAxesViewer(Scene scene, Bone bone, Mesh mesh, [num scaleLines]);
+	external factory BoneAxesViewer(Scene scene, Bone bone, Mesh mesh, [num? scaleLines]);
 	
 	/// Gets or sets the target mesh where to display the axes viewer
-	external Mesh get mesh;
-	external set mesh(Mesh value);
+	external Mesh? get mesh;
+	external set mesh(Mesh? value);
 	
 	/// Gets or sets the target bone where to display the axes viewer
-	external Bone get bone;
-	external set bone(Bone value);
+	external Bone? get bone;
+	external set bone(Bone? value);
 	
 	/// Gets current position
 	external Vector3 get pos;
@@ -100,7 +101,7 @@ class BoneAxesViewer extends AxesViewer {
 	
 	/// Force the viewer to update
 	@override
-	external void update([Vector3 position, Vector3 xaxis, Vector3 yaxis, Vector3 zaxis]);
+	external void update([Vector3? position, Vector3? xaxis, Vector3? yaxis, Vector3? zaxis]);
 	
 	/// Releases resources
 	@override
@@ -119,11 +120,11 @@ class PhysicsViewer {
 	/// @param impostor defines the impostor to render
 	/// @param targetMesh defines the mesh represented by the impostor
 	/// @returns the new debug mesh used to render the impostor
-	external AbstractMesh showImpostor(PhysicsImpostor impostor, [Mesh targetMesh]);
+	external AbstractMesh? showImpostor(PhysicsImpostor impostor, [Mesh? targetMesh]);
 	
 	/// Hides a specified physic impostor
 	/// @param impostor defines the impostor to hide
-	external void hideImpostor(PhysicsImpostor impostor);
+	external void hideImpostor(PhysicsImpostor? impostor);
 	
 	/// Releases all resources
 	external void dispose();
@@ -140,7 +141,7 @@ class SkeletonViewer {
 	/// @param scene defines the hosting scene
 	/// @param autoUpdateBonesMatrices defines a boolean indicating if bones matrices must be forced to update before rendering (true by default)
 	/// @param renderingGroupId defines the rendering group id to use with the viewer
-	external factory SkeletonViewer(Skeleton skeleton, AbstractMesh mesh, Scene scene, [bool autoUpdateBonesMatrices, num renderingGroupId]);
+	external factory SkeletonViewer(Skeleton skeleton, AbstractMesh mesh, Scene scene, [bool? autoUpdateBonesMatrices, num? renderingGroupId]);
 	
 	/// defines the skeleton to render
 	external Skeleton get skeleton;
@@ -163,7 +164,7 @@ class SkeletonViewer {
 	external set color(Color3 value);
 	
 	/// Returns the mesh used to render the bones
-	external LinesMesh get debugMesh;
+	external LinesMesh? get debugMesh;
 	
 	/// Gets or sets a boolean indicating if the viewer is enabled
 	external set isEnabled(bool value);
