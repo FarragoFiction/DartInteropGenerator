@@ -349,7 +349,7 @@ class TSDGrammarDefinition extends GrammarDefinition {
         ref1(token, '"').optional() &
         (
             ref1(token, "=") &
-            ( ref0(stringPrimitive) | ref0(DIGIT).plus().flatten().map(int.parse) )
+            ( ref0(stringPrimitive).map((dynamic l) => l.join("")) | ref0(DIGIT).plus().flatten().map(int.parse) )
         ).optional() &
         ref1(token, ",").optional();
 

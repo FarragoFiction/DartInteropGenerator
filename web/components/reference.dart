@@ -27,7 +27,7 @@ class TypeRef extends Component with HasGenerics {
     @override
     void writeOutput(OutputWriter writer) {
         if (this.getName().startsWith("_")) {
-            writer.write("dynamic");
+            writer.write("dynamic /* private $name */");
             return;
         }
         writer.write("List<" * array);

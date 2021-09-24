@@ -103,6 +103,7 @@ abstract class StaticTypes {
         "EventTarget": "HTML.EventTarget",
         "DOMPointReadOnly": "HTML.DomPointReadOnly",
         "XMLHttpRequest": "HTML.HttpRequest",
+        "HTMLDivElement": "HTML.DivElement",
 
         // dart:web_gl as WebGL
         "WebGLBuffer": "WebGL.Buffer",

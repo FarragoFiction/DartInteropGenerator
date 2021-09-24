@@ -652,8 +652,16 @@ class Processor {
         for (final String fileName in data.keys) {
             String fileContent = data[fileName]!;
 
-            //int id = 0;
+            int id = 0;
             for (final String fixKey in manualFixes.keys) {
+                if (fixKey.startsWith("!")) {
+                    print("Skipping disabled manual fix $id");
+                    appliedFixes.add(fixKey);
+                    id++;
+                    continue;
+                }
+
+                final RegExp pattern = new RegExp("^(\\s*)${RegExp.escape(fixKey)}", multiLine: true);
 
                 final Iterable<Match> matches = fixKey.allMatches(fileContent);
 
@@ -665,11 +673,15 @@ class Processor {
                     }
                     final String fixValue = manualFixes[fixKey]!;
 
-                    fileContent = fileContent.replaceAll(fixKey, fixValue);
+                    //fileContent = fileContent.replaceAll(fixKey, "/* Manual Fix $id */\n$fixValue");
+                    fileContent = fileContent.replaceAllMapped(pattern, (Match match) {
+                        final String indent = match.group(1) ?? "";
+                        return "$indent/* Manual Fix $id */\n$indent$fixValue";
+                    });
                     appliedFixes.add(fixKey);
                 }
 
-                //id++;
+                id++;
             }
 
             data[fileName] = fileContent;

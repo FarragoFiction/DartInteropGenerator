@@ -30,6 +30,7 @@
 		"XRWebGLLayer",
 		"XRRigidTransform",
 		"XRView",
-		"XRInputSourceEvent"
+		"XRInputSourceEvent",
+		"HTMLDivElement"
 	]
 }
