@@ -12365,7 +12365,7 @@ declare module BABYLON {
          * @param ownerBlock defines the block hosting this connection point
          * @param direction defines the direction of the connection point
          */
-        //WHAT constructor(name: string, ownerBlock: NodeMaterialBlock, direction: NodeMaterialConnectionPointDirection, _blockType: new (...args: any[]) => T, _blockName: string, _nameForCheking?: string | undefined);
+        constructor(name: string, ownerBlock: NodeMaterialBlock, direction: NodeMaterialConnectionPointDirection, _blockType: new (...args: any[]) => T, _blockName: string, _nameForCheking?: string | undefined);
         /**
          * Gets a number indicating if the current point can be connected to another point
          * @param connectionPoint defines the other connection point

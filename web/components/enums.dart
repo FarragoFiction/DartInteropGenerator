@@ -5,26 +5,38 @@ class Enum extends Component {
 
     @override
     void processList(List<dynamic> input) {
+        int nextGenerated = 0;
         // 0 docs
         // 1 export
-        // 2 enum
-        // 3 name
-        this.name = input[3];
-        // 4 {
-        // 5 values
-        for (final dynamic item in input[5]) {
+        // 2 const
+        // 3 enum
+        // 4 name
+        this.name = input[4];
+        // 5 {
+        // 6 values
+        for (final dynamic item in input[6]) {
             final EnumEntry entry = new EnumEntry();
             // 0 docs
             entry.docs = item[0];
-            // 1 name
-            entry.name = item[1];
-            // 2 =
-            // 3 number
-            entry.value = item[3];
-            // 4 ,
+            // 1 "
+            // 2 name
+            entry.name = item[2];
+            // 3 "
+            // 4 = value
+            if (item[4] != null) {
+                // 0 =
+                // 1 value
+                entry.value = item[4][1];
+                if (entry.value is int) {
+                    nextGenerated = entry.value++;
+                }
+            } else {
+                entry.value = nextGenerated++;
+            }
+            // 5 ,
             this.values.add(entry);
         }
-        // 6 }
+        // 7 }
     }
 
     @override
@@ -53,7 +65,15 @@ class Enum extends Component {
             writer
                 ..writeLine()
                 ..writeDocs(entry.docs, null)
-                ..writeIndented("static const int ")
+                ..writeIndented("static const ");
+            if (entry.value is int) {
+                writer.write("int ");
+            } else if (entry.value is String) {
+                writer.write("String ");
+            } else {
+                writer.write("dynamic ");
+            }
+            writer
                 ..write(entry.name)
                 ..write(" = ")
                 ..write(entry.value.toString())
@@ -69,7 +89,7 @@ class Enum extends Component {
 class EnumEntry {
     List<String>? docs;
     late String name;
-    late int value;
+    late dynamic value;
 
     @override
     String toString() => "$name = $value";

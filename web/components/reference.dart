@@ -121,6 +121,8 @@ class LambdaRef extends TypeRef {
         List<dynamic>? params;
         dynamic returns;
 
+        //print("LambdaRef: $input");
+
         if (input[0] == "{") {
             // lambda closure
             params = input[1][1];

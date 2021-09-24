@@ -150,9 +150,10 @@ class Parameter extends Component {
             this.isArgs = true;
         }
         // 2 colon
-        // 3 type
-        if (input[3] is TypeRef) {
-            this.type = input[3];
+        // 3 new (because of course this happens sometimes for whatever reason?)
+        // 4 type
+        if (input[4] is TypeRef) {
+            this.type = input[4];
             this.type!.parentComponent = this;
         } else {
             // a string...
@@ -199,7 +200,7 @@ class GenericRef extends Component {
         // 1 optional
         // 2 extends type
         if ((input[2] != null) && (input[2][1] == null)) {
-            print(input[2]);
+            print("GenericRef: ${input[2]}");
             this.extend = input[2][2];
         }
     }

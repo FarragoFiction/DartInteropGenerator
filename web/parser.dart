@@ -3,9 +3,9 @@ import "package:petitparser/petitparser.dart";
 import "components/components.dart";
 import "grammar.dart";
 
-class TSDParser extends GrammarParser {
+/*class TSDParser extends GrammarParser {
     TSDParser() : super(const TSDParserDefinition());
-}
+}*/
 
 class TSDParserDefinition extends TSDGrammarDefinition {
     const TSDParserDefinition();
@@ -121,7 +121,9 @@ class TSDParserDefinition extends TSDGrammarDefinition {
 
     @override
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
-    
+
+    //@override
+    //Parser<dynamic> lambda() => super.lambda().map((dynamic data) => data[1]);
     @override
     //Parser<dynamic> lambdaDef() => super.lambdaDef().map(handleErrors((dynamic data) => new LambdaRef()..notes.add(data.toString()) )); //TODO: give lambdas a proper output
     Parser<dynamic> lambdaDef() => super.lambdaDef().map(process(() => new LambdaRef()));

@@ -3,6 +3,7 @@ import "dart:math" as Math;
 import "package:petitparser/petitparser.dart";
 
 import "components/components.dart";
+import 'grammar.dart';
 import "parser.dart";
 
 class Processor {
@@ -21,7 +22,8 @@ class Processor {
     Map<String,String> process(String input, Iterable<String> extraImports) {
         // ################################################## PARSE ##################################################
 
-        final GrammarParser processor = new TSDParser();
+        //final GrammarParser processor = new TSDParser();
+        final Parser processor = const TSDParserDefinition().build();
 
         final DateTime startTime = new DateTime.now();
         print("Starting parse");

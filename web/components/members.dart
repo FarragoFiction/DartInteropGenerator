@@ -41,19 +41,21 @@ class Field extends Member implements FieldLike {
         this.static = input[3] != null;
         // 4 readonly
         this.readonly = input[4] != null;
-        // 5 name
-        this.name = input[5];
-        // 6 optional
-        // 7 value or semicolon
-        if (input[7] is List<dynamic>) {
-            if (input[7][1] is TypeRef) {
-                this.type = input[7][1];
-            } else if (input[7][1] is ArrayBrackets) {
-                this.type = input[7][1].toType();
-            } else if (input[7][1] is List<dynamic>) {
-                this.type = new TypeRef()..type=StaticTypes.typeDynamic..notes.add(input[7][1].join(" "));
+        // 5 quote
+        // 6 name
+        this.name = input[6];
+        // 7 quote
+        // 8 optional
+        // 9 value or semicolon
+        if (input[9] is List<dynamic>) {
+            if (input[9][1] is TypeRef) {
+                this.type = input[9][1];
+            } else if (input[9][1] is ArrayBrackets) {
+                this.type = input[9][1].toType();
+            } else if (input[9][1] is List<dynamic>) {
+                this.type = new TypeRef()..type=StaticTypes.typeDynamic..notes.add(input[9][1].join(" "));
             } else {
-                print("Field non-type: ${input[7][1]} in ${input[7]} -> $input");
+                print("Field non-type: ${input[9][1]} in ${input[9]} -> $input");
             }
         }
         this.type?.parentComponent = this;
