@@ -32,8 +32,8 @@ class AxesViewer {
 	external factory AxesViewer(Scene scene, [num? scaleLines, num? renderingGroupId, TransformNode? xAxis, TransformNode? yAxis, TransformNode? zAxis]);
 	
 	/// Gets the hosting scene
-	external Scene get scene;
-	external set scene(Scene value);
+	external Scene? get scene;
+	external set scene(Scene? value);
 	
 	/// Gets or sets a number used to scale line length
 	external num get scaleLines;
@@ -141,7 +141,8 @@ class SkeletonViewer {
 	/// @param scene defines the hosting scene
 	/// @param autoUpdateBonesMatrices defines a boolean indicating if bones matrices must be forced to update before rendering (true by default)
 	/// @param renderingGroupId defines the rendering group id to use with the viewer
-	external factory SkeletonViewer(Skeleton skeleton, AbstractMesh mesh, Scene scene, [bool? autoUpdateBonesMatrices, num? renderingGroupId]);
+	/// @param options All of the extra constructor options for the SkeletonViewer
+	external factory SkeletonViewer(Skeleton skeleton, AbstractMesh mesh, Scene scene, [bool? autoUpdateBonesMatrices, num? renderingGroupId, ISkeletonViewerOptions? options]);
 	
 	/// defines the skeleton to render
 	external Skeleton get skeleton;
@@ -159,20 +160,87 @@ class SkeletonViewer {
 	external num get renderingGroupId;
 	external set renderingGroupId(num value);
 	
+	/// is the options for the viewer
+	external ISkeletonViewerOptions get options;
+	external set options(ISkeletonViewerOptions value);
+	
+	/// public Display constants BABYLON.SkeletonViewer.DISPLAY_LINES
+	external static num get DISPLAY_LINES;
+	
+	/// public Display constants BABYLON.SkeletonViewer.DISPLAY_SPHERES
+	external static num get DISPLAY_SPHERES;
+	
+	/// public Display constants BABYLON.SkeletonViewer.DISPLAY_SPHERE_AND_SPURS
+	external static num get DISPLAY_SPHERE_AND_SPURS;
+	
+	/// public static method to create a BoneWeight Shader
+	/// @param options The constructor options
+	/// @param scene The scene that the shader is scoped to
+	/// @returns The created ShaderMaterial
+	/// @see http://www.babylonjs-playground.com/#1BZJVJ#395
+	external static ShaderMaterial CreateBoneWeightShader(IBoneWeightShaderOptions options, Scene scene);
+	
+	/// public static method to create a BoneWeight Shader
+	/// @param options The constructor options
+	/// @param scene The scene that the shader is scoped to
+	/// @returns The created ShaderMaterial
+	external static ShaderMaterial CreateSkeletonMapShader(ISkeletonMapShaderOptions options, Scene scene);
+	
 	/// Gets or sets the color used to render the skeleton
 	external Color3 get color;
 	external set color(Color3 value);
 	
-	/// Returns the mesh used to render the bones
-	external LinesMesh? get debugMesh;
+	/// Gets the Scene.
+	external Scene get scene;
+	
+	/// Gets the utilityLayer.
+	external UtilityLayerRenderer? get utilityLayer;
+	
+	/// Checks Ready Status.
+	external bool get isReady;
+	
+	/// Sets Ready Status.
+	external set ready(bool value);
+	
+	/// Gets the debugMesh
+	external dynamic get debugMesh;
+	
+	/// Sets the debugMesh
+	external set debugMesh(dynamic value);
+	
+	/// Gets the displayMode
+	external num get displayMode;
+	
+	/// Sets the displayMode
+	external set displayMode(num value);
+	
+	/// Update the viewer to sync with current skeleton state, only used to manually update.
+	external void update();
 	
 	/// Gets or sets a boolean indicating if the viewer is enabled
 	external set isEnabled(bool value);
 	
 	external bool get isEnabled;
 	
-	/// Update the viewer to sync with current skeleton state
-	external void update();
+	/// Changes the displayMode of the skeleton viewer
+	/// @param mode The displayMode numerical value
+	external void changeDisplayMode(num mode);
+	
+	/// Sets a display option of the skeleton viewer
+	/// 
+	/// | Option           | Type    | Default | Description |
+	/// | ---------------- | ------- | ------- | ----------- |
+	/// | midStep          | float   | 0.235   | A percentage between a bone and its child that determines the widest part of a spur. Only used when `displayMode` is set to `DISPLAY_SPHERE_AND_SPURS`. |
+	/// | midStepFactor    | float   | 0.15    | Mid step width expressed as a factor of the length. A value of 0.5 makes the spur width half of the spur length. Only used when `displayMode` is set to `DISPLAY_SPHERE_AND_SPURS`. |
+	/// | sphereBaseSize   | float   | 2       | Sphere base size. Only used when `displayMode` is set to `DISPLAY_SPHERE_AND_SPURS`. |
+	/// | sphereScaleUnit  | float   | 0.865   | Sphere scale factor used to scale spheres in relation to the longest bone. Only used when `displayMode` is set to `DISPLAY_SPHERE_AND_SPURS`. |
+	/// | spurFollowsChild | boolean | false   | Whether a spur should attach its far end to the child bone. |
+	/// | showLocalAxes    | boolean | false   | Displays local axes on all bones. |
+	/// | localAxesSize    | float   | 0.075   | Determines the length of each local axis. |
+	/// 
+	/// @param option String of the option name
+	/// @param value The numerical option value
+	external void changeDisplayOptions(String option, num value);
 	
 	/// Release associated resources
 	external void dispose();

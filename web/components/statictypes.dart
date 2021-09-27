@@ -1,8 +1,8 @@
 import "components.dart";
 
 abstract class StaticTypes {
-    static final ClassDef typeDynamic = new ClassDef()..name="dynamic";
-    static final ClassDef typeVoid = new ClassDef()..name="void";
+    static final ClassDef typeDynamic = new ClassDef()..name="dynamic"..canBeExtended=false;
+    static final ClassDef typeVoid = new ClassDef()..name="void"..canBeExtended=false;
 
     static final ClassDef typeString = new ClassDef()..name="String";
     static final ClassDef typeInt = new ClassDef()..name="int";

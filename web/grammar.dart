@@ -122,8 +122,10 @@ class TSDGrammarDefinition extends GrammarDefinition {
     Parser<dynamic> typeNoLambdaSingle() => ref0(qualified) & ref0(typeArguments).optional() & ref0(arrayBracketsStar);
     /// parameter with optional ? on the end
     Parser<dynamic> argumentType() => ref0(type) & ref1(token, "?").optional() & ((ref0(EXTENDS) | ref1(token, "=")) & ref0(KEYOF).optional() & ref0(type)).optional();
+    /// passing an array as a generic type... good grief typescript...
+    Parser<dynamic> argumentArrayType() => ref1(token, "[") & ref0(argumentTypeList) & ref1(token, "]");
     /// parameter list for type arguments
-    Parser<dynamic> argumentTypeList() => argumentType().separatedBy(ref1(token, ","), includeSeparators: false);
+    Parser<dynamic> argumentTypeList() => (ref0(argumentType) | ref0(argumentArrayType)).separatedBy(ref1(token, ","), includeSeparators: false);
     /// generic type block
     Parser<dynamic> typeArguments() => ref1(token, '<') & ref0(argumentTypeList) & ref1(token, '>');
 

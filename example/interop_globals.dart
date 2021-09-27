@@ -51,6 +51,7 @@ abstract class EXT_disjoint_timer_query {
 }
 
 @JS()
+/* Manual Fix 9 */
 abstract class VRDisplay {// extends HTML.EventTarget {
 	external factory VRDisplay();
 	
@@ -258,17 +259,53 @@ abstract class VRStageParameters {
 }
 
 @JS()
-abstract class XRSessionInit {
-	
-	external List<dynamic> get optionalFeatures;
-	external set optionalFeatures(List<dynamic> value);
-	
-	external List<dynamic> get requiredFeatures;
-	external set requiredFeatures(List<dynamic> value);
+/* Manual Fix 51 */
+abstract class XRLayer {
+	external factory XRLayer();
 }
 
 @JS()
-abstract class XRWebGLLayerOptions {
+abstract class XRSessionInit {
+	
+	external List<String> get optionalFeatures;
+	external set optionalFeatures(List<String> value);
+	
+	external List<String> get requiredFeatures;
+	external set requiredFeatures(List<String> value);
+}
+
+@JS()
+/* Manual Fix 50 */
+abstract class XRSessionEvent {
+	external factory XRSessionEvent();
+	
+	external dynamic get session;
+}
+
+@JS()
+abstract class XRSystem {
+	
+	external Promise<bool> Function(dynamic sessionMode) get isSessionSupported;
+	external set isSessionSupported(Promise<bool> Function(dynamic sessionMode) value);
+	
+	external Promise<dynamic> Function(dynamic sessionMode, [dynamic? sessionInit]) get requestSession;
+	external set requestSession(Promise<dynamic> Function(dynamic sessionMode, [dynamic? sessionInit]) value);
+}
+
+@JS()
+abstract class XRViewport {
+	
+	external num get x;
+	
+	external num get y;
+	
+	external num get width;
+	
+	external num get height;
+}
+
+@JS()
+abstract class XRWebGLLayerInit {
 	
 	external bool get antialias;
 	external set antialias(bool value);
@@ -290,7 +327,36 @@ abstract class XRWebGLLayerOptions {
 }
 
 @JS()
+abstract class XRRenderStateInit {
+	external factory XRRenderStateInit();
+	
+	external dynamic get baseLayer;
+	external set baseLayer(dynamic value);
+	
+	external num get depthFar;
+	external set depthFar(num value);
+	
+	external num get depthNear;
+	external set depthNear(num value);
+	
+	external num get inlineVerticalFieldOfView;
+	external set inlineVerticalFieldOfView(num value);
+	
+	external List<XRLayer> get layers;
+	external set layers(List<XRLayer> value);
+}
+
+@JS()
+abstract class XRBoundedReferenceSpace {
+	external factory XRBoundedReferenceSpace();
+	
+	external List<HTML.DomPointReadOnly> get boundsGeometry;
+}
+
+@JS()
+/* Manual Fix 49 */
 abstract class XRInputSourceChangeEvent {
+	external factory XRInputSourceChangeEvent();
 	
 	external dynamic get session;
 	external set session(dynamic value);
@@ -317,6 +383,16 @@ class XRRay {
 	external set matrix(Float32List value);
 }
 
+/* enum */
+abstract class XRHitTestTrackableType {
+	
+	static const int point = 0;
+	
+	static const int plane = 1;
+	
+	static const int mesh = 2;
+}
+
 @JS()
 abstract class XRHitResult {
 	
@@ -325,25 +401,73 @@ abstract class XRHitResult {
 }
 
 @JS()
-abstract class XRAnchor {
+abstract class XRTransientInputHitTestResult {
 	
-	external String get id;
-	external set id(String value);
+	external dynamic get inputSource;
+	
+	external List<XRHitTestResult> get results;
+}
+
+@JS()
+abstract class XRHitTestResult {
+	
+	external dynamic? getPose(dynamic baseSpace);
+	
+	external Promise<XRAnchor> createAnchor(dynamic pose);
+}
+
+@JS()
+abstract class XRHitTestSource {
+	
+	external void cancel();
+}
+
+@JS()
+abstract class XRTransientInputHitTestSource {
+	
+	external void cancel();
+}
+
+@JS()
+abstract class XRHitTestOptionsInit {
+	
+	external dynamic get space;
+	external set space(dynamic value);
+	
+	external List<int> get entityTypes;
+	external set entityTypes(List<int> value);
+	
+	external XRRay get offsetRay;
+	external set offsetRay(XRRay value);
+}
+
+@JS()
+abstract class XRTransientInputHitTestOptionsInit {
+	
+	external String get profile;
+	external set profile(String value);
+	
+	external List<int> get entityTypes;
+	external set entityTypes(List<int> value);
+	
+	external XRRay get offsetRay;
+	external set offsetRay(XRRay value);
+}
+
+@JS()
+abstract class XRAnchor {
 	
 	external dynamic get anchorSpace;
 	external set anchorSpace(dynamic value);
 	
-	external num get lastChangedTime;
-	external set lastChangedTime(num value);
-	
-	external void detach();
+	external void delete();
 }
 
 @JS()
-abstract class XRPlane implements XRAnchorCreator {
+abstract class XRPlane {
 	
-	external String get orientation;
-	external set orientation(String value);
+	external String /* [[", Horizontal, "], [", Vertical, "]] */ get orientation;
+	external set orientation(String /* [[", Horizontal, "], [", Vertical, "]] */ value);
 	
 	external dynamic get planeSpace;
 	external set planeSpace(dynamic value);
@@ -356,9 +480,74 @@ abstract class XRPlane implements XRAnchorCreator {
 }
 
 @JS()
-abstract class XRAnchorCreator {
+abstract class XRJointSpace {
+	external factory XRJointSpace();
+}
+
+@JS()
+abstract class XRJointPose {
+	external factory XRJointPose();
 	
-	external Promise<XRAnchor> createAnchor(dynamic pose, dynamic referenceSpace);
+	external num? get radius;
+	external set radius(num? value);
+}
+
+@JS()
+abstract class XRHand {
+	
+	external num get length;
+	
+	/* array access */
+	
+	external num get WRIST;
+	
+	external num get THUMB_METACARPAL;
+	
+	external num get THUMB_PHALANX_PROXIMAL;
+	
+	external num get THUMB_PHALANX_DISTAL;
+	
+	external num get THUMB_PHALANX_TIP;
+	
+	external num get INDEX_METACARPAL;
+	
+	external num get INDEX_PHALANX_PROXIMAL;
+	
+	external num get INDEX_PHALANX_INTERMEDIATE;
+	
+	external num get INDEX_PHALANX_DISTAL;
+	
+	external num get INDEX_PHALANX_TIP;
+	
+	external num get MIDDLE_METACARPAL;
+	
+	external num get MIDDLE_PHALANX_PROXIMAL;
+	
+	external num get MIDDLE_PHALANX_INTERMEDIATE;
+	
+	external num get MIDDLE_PHALANX_DISTAL;
+	
+	external num get MIDDLE_PHALANX_TIP;
+	
+	external num get RING_METACARPAL;
+	
+	external num get RING_PHALANX_PROXIMAL;
+	
+	external num get RING_PHALANX_INTERMEDIATE;
+	
+	external num get RING_PHALANX_DISTAL;
+	
+	external num get RING_PHALANX_TIP;
+	
+	external num get LITTLE_METACARPAL;
+	
+	external num get LITTLE_PHALANX_PROXIMAL;
+	
+	external num get LITTLE_PHALANX_INTERMEDIATE;
+	
+	external num get LITTLE_PHALANX_DISTAL;
+	
+	external num get LITTLE_PHALANX_TIP;
 }
 
 @JS()
@@ -466,60 +655,6 @@ class ThinEngineGetGlInfo {
 
 @JS()
 @anonymous
-class ThinEngineCreateRenderTargetTextureSize {
-	
-	external factory ThinEngineCreateRenderTargetTextureSize({num width, num height, num layers});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get layers;
-	external set layers( num value );
-}
-
-@JS()
-@anonymous
-class ThinEngineCreateDepthStencilTextureSize {
-	
-	external factory ThinEngineCreateDepthStencilTextureSize({num width, num height, num layers});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get layers;
-	external set layers( num value );
-}
-
-@JS()
-@anonymous
-class MaterialHelperPrepareDefinesForLightState {
-	
-	external factory MaterialHelperPrepareDefinesForLightState({bool needNormals, bool needRebuild, bool shadowEnabled, bool specularEnabled, bool lightmapMode});
-	
-	external bool get needNormals;
-	external set needNormals( bool value );
-	
-	external bool get needRebuild;
-	external set needRebuild( bool value );
-	
-	external bool get shadowEnabled;
-	external set shadowEnabled( bool value );
-	
-	external bool get specularEnabled;
-	external set specularEnabled( bool value );
-	
-	external bool get lightmapMode;
-	external set lightmapMode( bool value );
-}
-
-@JS()
-@anonymous
 class SceneGetWorldExtends {
 	
 	external factory SceneGetWorldExtends({Vector3 min, Vector3 max});
@@ -549,12 +684,248 @@ class StageObject<T> {
 
 @JS()
 @anonymous
+class RenderTargetTextureSizeObject {
+	
+	external factory RenderTargetTextureSizeObject({num width, num height, num layers});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get layers;
+	external set layers( num value );
+}
+
+@JS()
+@anonymous
+class IEditablePropertyOptionNotifiers {
+	
+	external factory IEditablePropertyOptionNotifiers({bool rebuild, bool update});
+	
+	external bool get rebuild;
+	external set rebuild( bool value );
+	
+	external bool get update;
+	external set update( bool value );
+}
+
+@JS()
+@anonymous
+class NodeMaterialBuildStateSharedDataHints {
+	
+	external factory NodeMaterialBuildStateSharedDataHints({bool needWorldViewMatrix, bool needWorldViewProjectionMatrix, bool needAlphaBlending, bool needAlphaTesting});
+	
+	external bool get needWorldViewMatrix;
+	external set needWorldViewMatrix( bool value );
+	
+	external bool get needWorldViewProjectionMatrix;
+	external set needWorldViewProjectionMatrix( bool value );
+	
+	external bool get needAlphaBlending;
+	external set needAlphaBlending( bool value );
+	
+	external bool get needAlphaTesting;
+	external set needAlphaTesting( bool value );
+}
+
+@JS()
+@anonymous
+class NodeMaterialBuildStateSharedDataChecks {
+	
+	external factory NodeMaterialBuildStateSharedDataChecks({bool emitVertex, bool emitFragment, List<NodeMaterialConnectionPoint> notConnectedNonOptionalInputs});
+	
+	external bool get emitVertex;
+	external set emitVertex( bool value );
+	
+	external bool get emitFragment;
+	external set emitFragment( bool value );
+	
+	external List<NodeMaterialConnectionPoint> get notConnectedNonOptionalInputs;
+	external set notConnectedNonOptionalInputs( List<NodeMaterialConnectionPoint> value );
+}
+
+@JS()
+@anonymous
+class NodeMaterialBlockConnectToOptions {
+	
+	external factory NodeMaterialBlockConnectToOptions({String input, String output, String outputSwizzle});
+	
+	external String get input;
+	external set input( String value );
+	
+	external String get output;
+	external set output( String value );
+	
+	external String get outputSwizzle;
+	external set outputSwizzle( String value );
+}
+
+@JS()
+@anonymous
+class NodeMaterialCreateProceduralTextureSize {
+	
+	external factory NodeMaterialCreateProceduralTextureSize({num width, num height, num layers});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get layers;
+	external set layers( num value );
+}
+
+@JS()
+@anonymous
+class IFresnelParametersCreationOptionsObject {
+	
+	external factory IFresnelParametersCreationOptionsObject({Color3 leftColor, Color3 rightColor, num bias, num power, bool isEnabled});
+	
+	external Color3 get leftColor;
+	external set leftColor( Color3 value );
+	
+	external Color3 get rightColor;
+	external set rightColor( Color3 value );
+	
+	external num get bias;
+	external set bias( num value );
+	
+	external num get power;
+	external set power( num value );
+	
+	external bool get isEnabled;
+	external set isEnabled( bool value );
+}
+
+@JS()
+@anonymous
+class IFresnelParametersSerializedObject {
+	
+	external factory IFresnelParametersSerializedObject({List<num> leftColor, List<num> rightColor, num bias, num power, bool isEnabled});
+	
+	external List<num> get leftColor;
+	external set leftColor( List<num> value );
+	
+	external List<num> get rightColor;
+	external set rightColor( List<num> value );
+	
+	external num get bias;
+	external set bias( num value );
+	
+	external num get power;
+	external set power( num value );
+	
+	external bool get isEnabled;
+	external set isEnabled( bool value );
+}
+
+@JS()
+@anonymous
+class PostProcessOptionsObject {
+	
+	external factory PostProcessOptionsObject({num width, num height});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+}
+
+@JS()
+@anonymous
+class MirrorTextureConstructorSize {
+	
+	external factory MirrorTextureConstructorSize({num width, num height, num ratio});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get ratio;
+	external set ratio( num value );
+}
+
+@JS()
+@anonymous
+class FreeCameraMouseInputOnPointerMovedObservable {
+	
+	external factory FreeCameraMouseInputOnPointerMovedObservable({num offsetX, num offsetY});
+	
+	external num get offsetX;
+	external set offsetX( num value );
+	
+	external num get offsetY;
+	external set offsetY( num value );
+}
+
+@JS()
+@anonymous
+class BaseCameraMouseWheelInputOnChangedObservable {
+	
+	external factory BaseCameraMouseWheelInputOnChangedObservable({num wheelDeltaX, num wheelDeltaY, num wheelDeltaZ});
+	
+	external num get wheelDeltaX;
+	external set wheelDeltaX( num value );
+	
+	external num get wheelDeltaY;
+	external set wheelDeltaY( num value );
+	
+	external num get wheelDeltaZ;
+	external set wheelDeltaZ( num value );
+}
+
+@JS()
+@anonymous
 class TransformNodeInstantiateHierarchyOptions {
 	
 	external factory TransformNodeInstantiateHierarchyOptions({bool doNotInstantiate});
 	
 	external bool get doNotInstantiate;
 	external set doNotInstantiate( bool value );
+}
+
+@JS()
+@anonymous
+class MultiviewRenderTargetConstructorSize {
+	
+	external factory MultiviewRenderTargetConstructorSize({num width, num height, num ratio});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get ratio;
+	external set ratio( num value );
+}
+
+@JS()
+@anonymous
+class MaterialHelperPrepareDefinesForLightState {
+	
+	external factory MaterialHelperPrepareDefinesForLightState({bool needNormals, bool needRebuild, bool shadowEnabled, bool specularEnabled, bool lightmapMode});
+	
+	external bool get needNormals;
+	external set needNormals( bool value );
+	
+	external bool get needRebuild;
+	external set needRebuild( bool value );
+	
+	external bool get shadowEnabled;
+	external set shadowEnabled( bool value );
+	
+	external bool get specularEnabled;
+	external set specularEnabled( bool value );
+	
+	external bool get lightmapMode;
+	external set lightmapMode( bool value );
 }
 
 @JS()
@@ -736,95 +1107,15 @@ class ShadowGeneratorForceCompilationAsyncOptions {
 
 @JS()
 @anonymous
-class FreeCameraMouseInputOnPointerMovedObservable {
+class MaterialOnEffectCreatedObservable {
 	
-	external factory FreeCameraMouseInputOnPointerMovedObservable({num offsetX, num offsetY});
+	external factory MaterialOnEffectCreatedObservable({Effect effect, SubMesh? subMesh});
 	
-	external num get offsetX;
-	external set offsetX( num value );
+	external Effect get effect;
+	external set effect( Effect value );
 	
-	external num get offsetY;
-	external set offsetY( num value );
-}
-
-@JS()
-@anonymous
-class MultiviewRenderTargetConstructorSize {
-	
-	external factory MultiviewRenderTargetConstructorSize({num width, num height, num ratio});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get ratio;
-	external set ratio( num value );
-}
-
-@JS()
-@anonymous
-class PostProcessOptionsObject {
-	
-	external factory PostProcessOptionsObject({num width, num height});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-}
-
-@JS()
-@anonymous
-class MirrorTextureConstructorSize {
-	
-	external factory MirrorTextureConstructorSize({num width, num height, num ratio});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get ratio;
-	external set ratio( num value );
-}
-
-@JS()
-@anonymous
-class RenderTargetTextureResizeSize {
-	
-	external factory RenderTargetTextureResizeSize({num width, num height, num ratio});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get ratio;
-	external set ratio( num value );
-}
-
-@JS()
-@anonymous
-class RenderTargetTextureConstructorSize {
-	
-	external factory RenderTargetTextureConstructorSize({num width, num height, num layers, num ratio});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get layers;
-	external set layers( num value );
-	
-	external num get ratio;
-	external set ratio( num value );
+	external SubMesh? get subMesh;
+	external set subMesh( SubMesh? value );
 }
 
 @JS()
@@ -838,6 +1129,19 @@ class GeometryExtend {
 	
 	external Vector3 get maximum;
 	external set maximum( Vector3 value );
+}
+
+@JS()
+@anonymous
+class PhysicsImpostorOnCollideE {
+	
+	external factory PhysicsImpostorOnCollideE({dynamic body, Vector3? point});
+	
+	external dynamic get body;
+	external set body( dynamic value );
+	
+	external Vector3? get point;
+	external set point( Vector3? value );
 }
 
 @JS()
@@ -1453,16 +1757,6 @@ class VertexDataComputeNormalsOptions {
 
 @JS()
 @anonymous
-class PhysicsImpostorOnCollideE {
-	
-	external factory PhysicsImpostorOnCollideE({dynamic body});
-	
-	external dynamic get body;
-	external set body( dynamic value );
-}
-
-@JS()
-@anonymous
 class DiscBuilderCreateDiscOptions {
 	
 	external factory DiscBuilderCreateDiscOptions({num radius, num tessellation, num arc, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs});
@@ -1504,6 +1798,19 @@ class SolidParticleSystemPickedParticles {
 
 @JS()
 @anonymous
+class SolidParticleSystemPickedBySubMesh {
+	
+	external factory SolidParticleSystemPickedBySubMesh({num idx, num faceId});
+	
+	external num get idx;
+	external set idx( num value );
+	
+	external num get faceId;
+	external set faceId( num value );
+}
+
+@JS()
+@anonymous
 class SolidParticleSystemDigestOptions {
 	
 	external factory SolidParticleSystemDigestOptions({num facetNb, num number, num delta, List<dynamic> storage});
@@ -1535,6 +1842,19 @@ class SolidParticleSystemAddShapeOptions {
 	
 	external List<dynamic> get storage;
 	external set storage( List<dynamic> value );
+}
+
+@JS()
+@anonymous
+class SolidParticleSystemPickedParticle {
+	
+	external factory SolidParticleSystemPickedParticle({num idx, num faceId});
+	
+	external num get idx;
+	external set idx( num value );
+	
+	external num get faceId;
+	external set faceId( num value );
 }
 
 @JS()
@@ -1582,6 +1902,41 @@ class NodeGetHierarchyBoundingVectors {
 	
 	external Vector3 get max;
 	external set max( Vector3 value );
+}
+
+@JS()
+@anonymous
+class RenderTargetTextureResizeSize {
+	
+	external factory RenderTargetTextureResizeSize({num width, num height, num ratio});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get ratio;
+	external set ratio( num value );
+}
+
+@JS()
+@anonymous
+class RenderTargetTextureConstructorSize {
+	
+	external factory RenderTargetTextureConstructorSize({num width, num height, num layers, num ratio});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get layers;
+	external set layers( num value );
+	
+	external num get ratio;
+	external set ratio( num value );
 }
 
 @JS()
@@ -1910,6 +2265,19 @@ class BoneLookControllerConstructorOptions {
 
 @JS()
 @anonymous
+class VirtualJoystickCustomizationsPosition {
+	
+	external factory VirtualJoystickCustomizationsPosition({num x, num y});
+	
+	external num get x;
+	external set x( num value );
+	
+	external num get y;
+	external set y( num value );
+}
+
+@JS()
+@anonymous
 class GroundBuilderCreateGroundOptions {
 	
 	external factory GroundBuilderCreateGroundOptions({num width, num height, num subdivisions, num subdivisionsX, num subdivisionsY, bool updatable});
@@ -2139,44 +2507,6 @@ class WebXRControllerComponentOnAxisValueChangedObservable {
 
 @JS()
 @anonymous
-class ISceneLoaderPluginAsyncImportMeshAsync {
-	
-	external factory ISceneLoaderPluginAsyncImportMeshAsync({List<AbstractMesh> meshes, List<IParticleSystem> particleSystems, List<Skeleton> skeletons, List<AnimationGroup> animationGroups});
-	
-	external List<AbstractMesh> get meshes;
-	external set meshes( List<AbstractMesh> value );
-	
-	external List<IParticleSystem> get particleSystems;
-	external set particleSystems( List<IParticleSystem> value );
-	
-	external List<Skeleton> get skeletons;
-	external set skeletons( List<Skeleton> value );
-	
-	external List<AnimationGroup> get animationGroups;
-	external set animationGroups( List<AnimationGroup> value );
-}
-
-@JS()
-@anonymous
-class SceneLoaderImportMeshAsync {
-	
-	external factory SceneLoaderImportMeshAsync({List<AbstractMesh> meshes, List<IParticleSystem> particleSystems, List<Skeleton> skeletons, List<AnimationGroup> animationGroups});
-	
-	external List<AbstractMesh> get meshes;
-	external set meshes( List<AbstractMesh> value );
-	
-	external List<IParticleSystem> get particleSystems;
-	external set particleSystems( List<IParticleSystem> value );
-	
-	external List<Skeleton> get skeletons;
-	external set skeletons( List<Skeleton> value );
-	
-	external List<AnimationGroup> get animationGroups;
-	external set animationGroups( List<AnimationGroup> value );
-}
-
-@JS()
-@anonymous
 class IMinimalMotionControllerObjectButtons {
 	
 	external factory IMinimalMotionControllerObjectButtons({num value, bool touched, bool pressed});
@@ -2189,6 +2519,16 @@ class IMinimalMotionControllerObjectButtons {
 	
 	external bool get pressed;
 	external set pressed( bool value );
+}
+
+@JS()
+@anonymous
+class IMinimalMotionControllerObjectHapticActuators {
+	
+	external factory IMinimalMotionControllerObjectHapticActuators({Promise<bool> Function(num value, num duration) pulse});
+	
+	external Promise<bool> Function(num value, num duration) get pulse;
+	external set pulse( Promise<bool> Function(num value, num duration) value );
 }
 
 @JS()
@@ -2305,6 +2645,22 @@ class LinesBuilderCreateDashedLinesOptions {
 
 @JS()
 @anonymous
+class ITimerOptionsObservableParameters {
+	
+	external factory ITimerOptionsObservableParameters({num mask, bool insertFirst, dynamic scope});
+	
+	external num get mask;
+	external set mask( num value );
+	
+	external bool get insertFirst;
+	external set insertFirst( bool value );
+	
+	external dynamic get scope;
+	external set scope( dynamic value );
+}
+
+@JS()
+@anonymous
 class IWebXRTeleportationOptionsDefaultTargetMeshOptions {
 	
 	external factory IWebXRTeleportationOptionsDefaultTargetMeshOptions({String teleportationFillColor, String teleportationBorderColor, bool disableAnimation, bool disableLighting, Material torusArrowMaterial});
@@ -2350,71 +2706,12 @@ class PlaneDragGizmoOnSnapObservable {
 
 @JS()
 @anonymous
-class AxisDragGizmoOnSnapObservable {
+class PlaneRotationGizmoOnSnapObservable {
 	
-	external factory AxisDragGizmoOnSnapObservable({num snapDistance});
+	external factory PlaneRotationGizmoOnSnapObservable({num snapDistance});
 	
 	external num get snapDistance;
 	external set snapDistance( num value );
-}
-
-@JS()
-@anonymous
-class BoxBuilderCreateBoxOptions {
-	
-	external factory BoxBuilderCreateBoxOptions({num size, num width, num height, num depth, List<Vector4> faceUV, List<Color4> faceColors, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap, num topBaseAt, num bottomBaseAt, bool updatable});
-	
-	external num get size;
-	external set size( num value );
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
-	
-	external num get depth;
-	external set depth( num value );
-	
-	external List<Vector4> get faceUV;
-	external set faceUV( List<Vector4> value );
-	
-	external List<Color4> get faceColors;
-	external set faceColors( List<Color4> value );
-	
-	external num get sideOrientation;
-	external set sideOrientation( num value );
-	
-	external Vector4 get frontUVs;
-	external set frontUVs( Vector4 value );
-	
-	external Vector4 get backUVs;
-	external set backUVs( Vector4 value );
-	
-	external bool get wrap;
-	external set wrap( bool value );
-	
-	external num get topBaseAt;
-	external set topBaseAt( num value );
-	
-	external num get bottomBaseAt;
-	external set bottomBaseAt( num value );
-	
-	external bool get updatable;
-	external set updatable( bool value );
-}
-
-@JS()
-@anonymous
-class NativeEngineCreateRenderTargetTextureSize {
-	
-	external factory NativeEngineCreateRenderTargetTextureSize({num width, num height});
-	
-	external num get width;
-	external set width( num value );
-	
-	external num get height;
-	external set height( num value );
 }
 
 @JS()
@@ -2465,19 +2762,55 @@ class PolyhedronBuilderCreatePolyhedronOptions {
 
 @JS()
 @anonymous
-class AxisScaleGizmoOnSnapObservable {
+class BoxBuilderCreateBoxOptions {
 	
-	external factory AxisScaleGizmoOnSnapObservable({num snapDistance});
+	external factory BoxBuilderCreateBoxOptions({num size, num width, num height, num depth, List<Vector4> faceUV, List<Color4> faceColors, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap, num topBaseAt, num bottomBaseAt, bool updatable});
 	
-	external num get snapDistance;
-	external set snapDistance( num value );
+	external num get size;
+	external set size( num value );
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+	
+	external num get depth;
+	external set depth( num value );
+	
+	external List<Vector4> get faceUV;
+	external set faceUV( List<Vector4> value );
+	
+	external List<Color4> get faceColors;
+	external set faceColors( List<Color4> value );
+	
+	external num get sideOrientation;
+	external set sideOrientation( num value );
+	
+	external Vector4 get frontUVs;
+	external set frontUVs( Vector4 value );
+	
+	external Vector4 get backUVs;
+	external set backUVs( Vector4 value );
+	
+	external bool get wrap;
+	external set wrap( bool value );
+	
+	external num get topBaseAt;
+	external set topBaseAt( num value );
+	
+	external num get bottomBaseAt;
+	external set bottomBaseAt( num value );
+	
+	external bool get updatable;
+	external set updatable( bool value );
 }
 
 @JS()
 @anonymous
-class PlaneRotationGizmoOnSnapObservable {
+class AxisScaleGizmoOnSnapObservable {
 	
-	external factory PlaneRotationGizmoOnSnapObservable({num snapDistance});
+	external factory AxisScaleGizmoOnSnapObservable({num snapDistance});
 	
 	external num get snapDistance;
 	external set snapDistance( num value );
@@ -2504,97 +2837,12 @@ class GizmoManagerGizmos {
 
 @JS()
 @anonymous
-class HemisphereBuilderCreateHemisphereOptions {
+class AxisDragGizmoOnSnapObservable {
 	
-	external factory HemisphereBuilderCreateHemisphereOptions({num segments, num diameter, num sideOrientation});
+	external factory AxisDragGizmoOnSnapObservable({num snapDistance});
 	
-	external num get segments;
-	external set segments( num value );
-	
-	external num get diameter;
-	external set diameter( num value );
-	
-	external num get sideOrientation;
-	external set sideOrientation( num value );
-}
-
-@JS()
-@anonymous
-class EnvironmentHelperOnErrorObservable {
-	
-	external factory EnvironmentHelperOnErrorObservable({String message, dynamic exception});
-	
-	external String get message;
-	external set message( String value );
-	
-	external dynamic get exception;
-	external set exception( dynamic value );
-}
-
-@JS()
-@anonymous
-class PhotoDomeConstructorOptions {
-	
-	external factory PhotoDomeConstructorOptions({num resolution, num size, bool useDirectMapping, bool faceForward});
-	
-	external num get resolution;
-	external set resolution( num value );
-	
-	external num get size;
-	external set size( num value );
-	
-	external bool get useDirectMapping;
-	external set useDirectMapping( bool value );
-	
-	external bool get faceForward;
-	external set faceForward( bool value );
-}
-
-@JS()
-@anonymous
-class VideoDomeConstructorOptions {
-	
-	external factory VideoDomeConstructorOptions({num resolution, bool clickToPlay, bool autoPlay, bool loop, num size, String poster, bool faceForward, bool useDirectMapping, bool halfDomeMode});
-	
-	external num get resolution;
-	external set resolution( num value );
-	
-	external bool get clickToPlay;
-	external set clickToPlay( bool value );
-	
-	external bool get autoPlay;
-	external set autoPlay( bool value );
-	
-	external bool get loop;
-	external set loop( bool value );
-	
-	external num get size;
-	external set size( num value );
-	
-	external String get poster;
-	external set poster( String value );
-	
-	external bool get faceForward;
-	external set faceForward( bool value );
-	
-	external bool get useDirectMapping;
-	external set useDirectMapping( bool value );
-	
-	external bool get halfDomeMode;
-	external set halfDomeMode( bool value );
-}
-
-@JS()
-@anonymous
-class MinMaxReducerOnAfterReductionPerformed {
-	
-	external factory MinMaxReducerOnAfterReductionPerformed({num min, num max});
-	
-	external num get min;
-	external set min( num value );
-	
-	external num get max;
-	external set max( num value );
+	external num get snapDistance;
+	external set snapDistance( num value );
 }
 
 @JS()
@@ -2728,6 +2976,146 @@ class ShapeBuilderExtrudeShapeCustomOptions {
 
 @JS()
 @anonymous
+/* Manual Fix 52 */
+class DeviceSourceOnInputChangedObservable<T> {
+	
+	external factory DeviceSourceOnInputChangedObservable({T inputIndex, num? previousState, num? currentState});
+	
+	external T get inputIndex;
+	external set inputIndex( T value );
+	
+	external num? get previousState;
+	external set previousState( num? value );
+	
+	external num? get currentState;
+	external set currentState( num? value );
+}
+
+@JS()
+@anonymous
+class NativeEngineCreateRenderTargetTextureSize {
+	
+	external factory NativeEngineCreateRenderTargetTextureSize({num width, num height});
+	
+	external num get width;
+	external set width( num value );
+	
+	external num get height;
+	external set height( num value );
+}
+
+@JS()
+@anonymous
+class HemisphereBuilderCreateHemisphereOptions {
+	
+	external factory HemisphereBuilderCreateHemisphereOptions({num segments, num diameter, num sideOrientation});
+	
+	external num get segments;
+	external set segments( num value );
+	
+	external num get diameter;
+	external set diameter( num value );
+	
+	external num get sideOrientation;
+	external set sideOrientation( num value );
+}
+
+@JS()
+@anonymous
+class EnvironmentHelperOnErrorObservable {
+	
+	external factory EnvironmentHelperOnErrorObservable({String message, dynamic exception});
+	
+	external String get message;
+	external set message( String value );
+	
+	external dynamic get exception;
+	external set exception( dynamic value );
+}
+
+@JS()
+@anonymous
+class TextureDomeConstructorOptions {
+	
+	external factory TextureDomeConstructorOptions({num resolution, bool clickToPlay, bool autoPlay, bool loop, num size, String poster, bool faceForward, bool useDirectMapping, bool halfDomeMode, bool crossEyeMode, bool generateMipMaps});
+	
+	external num get resolution;
+	external set resolution( num value );
+	
+	external bool get clickToPlay;
+	external set clickToPlay( bool value );
+	
+	external bool get autoPlay;
+	external set autoPlay( bool value );
+	
+	external bool get loop;
+	external set loop( bool value );
+	
+	external num get size;
+	external set size( num value );
+	
+	external String get poster;
+	external set poster( String value );
+	
+	external bool get faceForward;
+	external set faceForward( bool value );
+	
+	external bool get useDirectMapping;
+	external set useDirectMapping( bool value );
+	
+	external bool get halfDomeMode;
+	external set halfDomeMode( bool value );
+	
+	external bool get crossEyeMode;
+	external set crossEyeMode( bool value );
+	
+	external bool get generateMipMaps;
+	external set generateMipMaps( bool value );
+}
+
+@JS()
+@anonymous
+class KhronosTextureContainer2URLConfig {
+	
+	external factory KhronosTextureContainer2URLConfig({String jsDecoderModule, void wasmUASTCToASTC, void wasmUASTCToBC7, void wasmUASTCToRGBA_UNORM, void wasmUASTCToRGBA_SRGB, void jsMSCTranscoder, void wasmMSCTranscoder});
+	
+	external String get jsDecoderModule;
+	external set jsDecoderModule( String value );
+	
+	external void get wasmUASTCToASTC;
+	external set wasmUASTCToASTC( void value );
+	
+	external void get wasmUASTCToBC7;
+	external set wasmUASTCToBC7( void value );
+	
+	external void get wasmUASTCToRGBA_UNORM;
+	external set wasmUASTCToRGBA_UNORM( void value );
+	
+	external void get wasmUASTCToRGBA_SRGB;
+	external set wasmUASTCToRGBA_SRGB( void value );
+	
+	external void get jsMSCTranscoder;
+	external set jsMSCTranscoder( void value );
+	
+	external void get wasmMSCTranscoder;
+	external set wasmMSCTranscoder( void value );
+}
+
+@JS()
+@anonymous
+class MinMaxReducerOnAfterReductionPerformed {
+	
+	external factory MinMaxReducerOnAfterReductionPerformed({num min, num max});
+	
+	external num get min;
+	external set min( num value );
+	
+	external num get max;
+	external set max( num value );
+}
+
+@JS()
+@anonymous
 class BasisFileInfoImages {
 	
 	external factory BasisFileInfoImages({List<BasisFileInfoImagesLevels> levels});
@@ -2769,57 +3157,6 @@ class BasisTranscodeConfigurationSupportedCompressionFormats {
 	
 	external bool get etc2;
 	external set etc2( bool value );
-}
-
-@JS()
-@anonymous
-class NodeMaterialBuildStateSharedDataHints {
-	
-	external factory NodeMaterialBuildStateSharedDataHints({bool needWorldViewMatrix, bool needWorldViewProjectionMatrix, bool needAlphaBlending, bool needAlphaTesting});
-	
-	external bool get needWorldViewMatrix;
-	external set needWorldViewMatrix( bool value );
-	
-	external bool get needWorldViewProjectionMatrix;
-	external set needWorldViewProjectionMatrix( bool value );
-	
-	external bool get needAlphaBlending;
-	external set needAlphaBlending( bool value );
-	
-	external bool get needAlphaTesting;
-	external set needAlphaTesting( bool value );
-}
-
-@JS()
-@anonymous
-class NodeMaterialBuildStateSharedDataChecks {
-	
-	external factory NodeMaterialBuildStateSharedDataChecks({bool emitVertex, bool emitFragment, List<NodeMaterialConnectionPoint> notConnectedNonOptionalInputs});
-	
-	external bool get emitVertex;
-	external set emitVertex( bool value );
-	
-	external bool get emitFragment;
-	external set emitFragment( bool value );
-	
-	external List<NodeMaterialConnectionPoint> get notConnectedNonOptionalInputs;
-	external set notConnectedNonOptionalInputs( List<NodeMaterialConnectionPoint> value );
-}
-
-@JS()
-@anonymous
-class NodeMaterialBlockConnectToOptions {
-	
-	external factory NodeMaterialBlockConnectToOptions({String input, String output, String outputSwizzle});
-	
-	external String get input;
-	external set input( String value );
-	
-	external String get output;
-	external set output( String value );
-	
-	external String get outputSwizzle;
-	external set outputSwizzle( String value );
 }
 
 @JS()
@@ -2925,7 +3262,7 @@ class TorusKnotBuilderCreateTorusKnotOptions {
 @anonymous
 class PolygonBuilderCreatePolygonOptions {
 	
-	external factory PolygonBuilderCreatePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs});
+	external factory PolygonBuilderCreatePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap});
 	
 	external List<Vector3> get shape;
 	external set shape( List<Vector3> value );
@@ -2953,13 +3290,16 @@ class PolygonBuilderCreatePolygonOptions {
 	
 	external Vector4 get backUVs;
 	external set backUVs( Vector4 value );
+	
+	external bool get wrap;
+	external set wrap( bool value );
 }
 
 @JS()
 @anonymous
 class PolygonBuilderExtrudePolygonOptions {
 	
-	external factory PolygonBuilderExtrudePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs});
+	external factory PolygonBuilderExtrudePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap});
 	
 	external List<Vector3> get shape;
 	external set shape( List<Vector3> value );
@@ -2987,6 +3327,9 @@ class PolygonBuilderExtrudePolygonOptions {
 	
 	external Vector4 get backUVs;
 	external set backUVs( Vector4 value );
+	
+	external bool get wrap;
+	external set wrap( bool value );
 }
 
 @JS()
@@ -3181,7 +3524,7 @@ class DecalBuilderCreateDecalOptions {
 @anonymous
 class MeshBuilderCreateBoxOptions {
 	
-	external factory MeshBuilderCreateBoxOptions({num size, num width, num height, num depth, List<Vector4> faceUV, List<Color4> faceColors, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool updatable});
+	external factory MeshBuilderCreateBoxOptions({num size, num width, num height, num depth, List<Vector4> faceUV, List<Color4> faceColors, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap, num topBaseAt, num bottomBaseAt, bool updatable});
 	
 	external num get size;
 	external set size( num value );
@@ -3209,6 +3552,15 @@ class MeshBuilderCreateBoxOptions {
 	
 	external Vector4 get backUVs;
 	external set backUVs( Vector4 value );
+	
+	external bool get wrap;
+	external set wrap( bool value );
+	
+	external num get topBaseAt;
+	external set topBaseAt( num value );
+	
+	external num get bottomBaseAt;
+	external set bottomBaseAt( num value );
 	
 	external bool get updatable;
 	external set updatable( bool value );
@@ -3957,7 +4309,7 @@ class MeshBuilderCreatePolygonOptions {
 @anonymous
 class MeshBuilderExtrudePolygonOptions {
 	
-	external factory MeshBuilderExtrudePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs});
+	external factory MeshBuilderExtrudePolygonOptions({List<Vector3> shape, List<List<Vector3>> holes, num depth, List<Vector4> faceUV, List<Color4> faceColors, bool updatable, num sideOrientation, Vector4 frontUVs, Vector4 backUVs, bool wrap});
 	
 	external List<Vector3> get shape;
 	external set shape( List<Vector3> value );
@@ -3985,6 +4337,9 @@ class MeshBuilderExtrudePolygonOptions {
 	
 	external Vector4 get backUVs;
 	external set backUVs( Vector4 value );
+	
+	external bool get wrap;
+	external set wrap( bool value );
 }
 
 @JS()
@@ -4315,4 +4670,83 @@ class WebXRControllerPhysicsSetPhysicsPropertiesNewPropertiesImpostorSize {
 	
 	external num get depth;
 	external set depth( num value );
+}
+
+@JS()
+@anonymous
+class IWebXRHandTrackingOptionsJointMeshes {
+	
+	external factory IWebXRHandTrackingOptionsJointMeshes({bool invisible, Mesh sourceMesh, Mesh? Function(InstancedMesh meshInstance, num jointId, String controllerId) onHandJointMeshGenerated, bool keepOriginalVisible, num scaleFactor, bool enablePhysics, IWebXRHandTrackingOptionsJointMeshesPhysicsProps physicsProps, bool disableDefaultHandMesh, IWebXRHandTrackingOptionsJointMeshesHandMeshes handMeshes, IWebXRHandTrackingOptionsJointMeshesRigMapping rigMapping});
+	
+	external bool get invisible;
+	external set invisible( bool value );
+	
+	external Mesh get sourceMesh;
+	external set sourceMesh( Mesh value );
+	
+	external Mesh? Function(InstancedMesh meshInstance, num jointId, String controllerId) get onHandJointMeshGenerated;
+	external set onHandJointMeshGenerated( Mesh? Function(InstancedMesh meshInstance, num jointId, String controllerId) value );
+	
+	external bool get keepOriginalVisible;
+	external set keepOriginalVisible( bool value );
+	
+	external num get scaleFactor;
+	external set scaleFactor( num value );
+	
+	external bool get enablePhysics;
+	external set enablePhysics( bool value );
+	
+	external IWebXRHandTrackingOptionsJointMeshesPhysicsProps get physicsProps;
+	external set physicsProps( IWebXRHandTrackingOptionsJointMeshesPhysicsProps value );
+	
+	external bool get disableDefaultHandMesh;
+	external set disableDefaultHandMesh( bool value );
+	
+	external IWebXRHandTrackingOptionsJointMeshesHandMeshes get handMeshes;
+	external set handMeshes( IWebXRHandTrackingOptionsJointMeshesHandMeshes value );
+	
+	external IWebXRHandTrackingOptionsJointMeshesRigMapping get rigMapping;
+	external set rigMapping( IWebXRHandTrackingOptionsJointMeshesRigMapping value );
+}
+
+@JS()
+@anonymous
+class IWebXRHandTrackingOptionsJointMeshesPhysicsProps {
+	
+	external factory IWebXRHandTrackingOptionsJointMeshesPhysicsProps({num friction, num restitution, num impostorType});
+	
+	external num get friction;
+	external set friction( num value );
+	
+	external num get restitution;
+	external set restitution( num value );
+	
+	external num get impostorType;
+	external set impostorType( num value );
+}
+
+@JS()
+@anonymous
+class IWebXRHandTrackingOptionsJointMeshesHandMeshes {
+	
+	external factory IWebXRHandTrackingOptionsJointMeshesHandMeshes({AbstractMesh right, AbstractMesh left});
+	
+	external AbstractMesh get right;
+	external set right( AbstractMesh value );
+	
+	external AbstractMesh get left;
+	external set left( AbstractMesh value );
+}
+
+@JS()
+@anonymous
+class IWebXRHandTrackingOptionsJointMeshesRigMapping {
+	
+	external factory IWebXRHandTrackingOptionsJointMeshesRigMapping({List<String> right, List<String> left});
+	
+	external List<String> get right;
+	external set right( List<String> value );
+	
+	external List<String> get left;
+	external set left( List<String> value );
 }

@@ -2,6 +2,7 @@ import "components.dart";
 
 class TypeDef extends Component with HasGenerics{
     bool isAbstract = false;
+    bool canBeExtended = true;
     final Set<TypeRef> inherits = <TypeRef>{};
     late Iterable<TypeRef> extend;
     late Iterable<TypeRef> implement;
@@ -130,9 +131,10 @@ class TypeDef extends Component with HasGenerics{
         writeReference(writer, generics);
         writer.write(" ");
 
-        if (!extend.isEmpty) {
+        final Iterable<TypeRef> filteredExtend = extend.where((TypeRef ref) => ref.type?.canBeExtended ?? false);
+        if (!filteredExtend.isEmpty) {
             writer.write("extends ");
-            extend.first.writeOutput(writer);
+            filteredExtend.first.writeOutput(writer);
             writer.write(" ");
         }
 

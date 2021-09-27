@@ -194,13 +194,15 @@ class GenericRef extends Component {
             this.type!.parentComponent = this;
         } else if (input[0] is ArrayBrackets) {
             this.type = input[0].toType();
+        } else if (input[0] is List) {
+            print("GenericRef list: ${input[0]} in $input");
         } else {
-            print("GenericRef non-type: ${input[0]} in $input");
+            print("GenericRef non-type: ${input[0].runtimeType} ${input[0]} in $input");
         }
         // 1 optional
         // 2 extends type
         if ((input[2] != null) && (input[2][1] == null)) {
-            print("GenericRef: ${input[2]}");
+            //print("GenericRef: ${input[2]}");
             this.extend = input[2][2];
         }
     }

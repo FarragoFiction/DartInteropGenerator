@@ -59,6 +59,9 @@
 
     "class IWebXRHitResult" : "class IWebXRHitResult extends IWebXRLegacyHitResult",
     "external set xrHitResult( XRHitTestResult value );" : "external set xrHitResult( dynamic value );",
+    "abstract class XRInputSourceChangeEvent extends HTML.Event {" : "abstract class XRInputSourceChangeEvent {",
+    "abstract class XRSessionEvent extends HTML.Event {" : "abstract class XRSessionEvent {",
+    "abstract class XRLayer extends HTML.EventTarget {" : "abstract class XRLayer {",
 
     "class DeviceSourceOnInputChangedObservable" : "class DeviceSourceOnInputChangedObservable<T>"
   },

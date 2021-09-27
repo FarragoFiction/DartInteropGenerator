@@ -12067,7 +12067,7 @@ declare module BABYLON {
          * If null is returned, a block based on the point type will be created.
          * @returns The returned string parameter is the name of the output point of NodeMaterialBlock (first parameter of the returned array) that can be connected to the input
          */
-        //WHAT createCustomInputBlock(): Nullable<[NodeMaterialBlock, string]>;
+        createCustomInputBlock(): Nullable<[NodeMaterialBlock, string]>;
         /**
          * Creates a new connection point
          * @param name defines the connection point name
@@ -12377,7 +12377,7 @@ declare module BABYLON {
          * If null is returned, a block based on the point type will be created.
          * @returns The returned string parameter is the name of the output point of NodeMaterialBlock (first parameter of the returned array) that can be connected to the input
          */
-        //WHAT createCustomInputBlock(): Nullable<[NodeMaterialBlock, string]>;
+        createCustomInputBlock(): Nullable<[NodeMaterialBlock, string]>;
     }
 }
 declare module BABYLON {

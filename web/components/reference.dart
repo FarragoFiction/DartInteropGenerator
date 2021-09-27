@@ -40,6 +40,9 @@ class TypeRef extends Component with HasGenerics {
             print("Unresolved type $name");
             writer.write("dynamic /* unresolved: $name */");
         }
+        for (final String note in this.notes) {
+            writer.write(" /* $note */");
+        }
         writer.write(">" * array);
         if (isNullable) {
             writer.write("?");

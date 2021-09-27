@@ -121,6 +121,28 @@ class TSDParserDefinition extends TSDGrammarDefinition {
 
     @override
     Parser<dynamic> argumentType() => super.argumentType().map(process(() => new GenericRef()));
+    @override
+    Parser<dynamic> argumentArrayType() => super.argumentArrayType().map(handleErrors((dynamic data) {
+        // 0 [
+        // 1 list of types
+        final GenericRef array = new GenericRef();
+        TypeRef? arrayType;
+        final List<dynamic> items = data[1];
+        for (final dynamic item in items) {
+            if(item is GenericRef) {
+                arrayType ??= item.type;
+                if (item.type?.name != arrayType?.name) {
+                    arrayType = new TypeRef()..type = StaticTypes.typeDynamic;
+                    break;
+                }
+            }
+        }
+        arrayType ??= new TypeRef()..type = StaticTypes.typeDynamic;
+        array.type = arrayType..array = 1;
+        arrayType.notes.add("Exact list: [${items.whereType<GenericRef>().map((GenericRef t) => t.getName()).join(", ")}]");
+        // 2 ]
+        return array;
+    }));
 
     //@override
     //Parser<dynamic> lambda() => super.lambda().map((dynamic data) => data[1]);

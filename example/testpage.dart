@@ -28,7 +28,7 @@ Future<void> main() async {
 Future<B.Scene> createScene(B.Engine engine, CanvasElement canvas) async {
     final B.Scene scene = new B.Scene(engine);
     final B.Camera camera = new B.ArcRotateCamera("camera", 0, 0, 5, B.Vector3.Zero(), scene)
-        ..attachControl(canvas, false);
+        ..attachControl(false);
 
     final B.Light light = new B.HemisphericLight("light1", new B.Vector3(0,1,0), scene);
 
